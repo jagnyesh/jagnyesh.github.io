@@ -1,0 +1,186 @@
+---
+import { EMAIL, GITHUB_URL, LINKEDIN_URL, SITE_TITLE } from '../consts';
+import { certifications, education, experience, headline, location, skills, summary } from '../data/resume';
+import Base from '../layouts/Base.astro';
+
+const bareUrl = (url: string) => url.replace(/^https:\/\/(www\.)?/, '');
+---
+
+<Base title="Résumé" description={`Résumé of ${SITE_TITLE}: clinical informatics, clinical data governance and standards, canonical data models and data quality.`} narrow>
+	<header class="resume-header">
+		<h1>{SITE_TITLE}</h1>
+		<p class="headline">{headline.join(' · ')}</p>
+		<p class="contact">
+			<span>{location}</span>
+			<a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+			<a href={LINKEDIN_URL}>{bareUrl(LINKEDIN_URL)}</a>
+			<a href={GITHUB_URL}>{bareUrl(GITHUB_URL)}</a>
+		</p>
+		<button type="button" class="print" onclick="window.print()">Print or save as PDF</button>
+	</header>
+
+	<section aria-labelledby="summary">
+		<h2 id="summary">Summary</h2>
+		<p>{summary}</p>
+	</section>
+
+	<section aria-labelledby="experience">
+		<h2 id="experience">Professional experience</h2>
+		{
+			experience.map((role) => (
+				<div class="role">
+					<h3>
+						{role.title} · {role.org}
+						{role.location && <span class="muted">, {role.location}</span>}
+					</h3>
+					<p class="when">
+						{role.unit && <>{role.unit} · </>}
+						{role.dates}
+					</p>
+					<ul>
+						{role.bullets.map((bullet) => (
+							<li>{bullet}</li>
+						))}
+					</ul>
+				</div>
+			))
+		}
+	</section>
+
+	<section aria-labelledby="skills">
+		<h2 id="skills">Skills</h2>
+		<dl>
+			{
+				skills.map((skill) => (
+					<>
+						<dt>{skill.label}</dt>
+						<dd>{skill.items}</dd>
+					</>
+				))
+			}
+		</dl>
+	</section>
+
+	<section aria-labelledby="education">
+		<h2 id="education">Education</h2>
+		<ul class="plain">
+			{
+				education.map((entry) => (
+					<li>
+						<strong>{entry.degree}</strong> · {entry.school}
+					</li>
+				))
+			}
+		</ul>
+	</section>
+
+	<section aria-labelledby="certifications">
+		<h2 id="certifications">Certifications</h2>
+		<ul class="plain">
+			{certifications.map((cert) => <li>{cert}</li>)}
+		</ul>
+	</section>
+</Base>
+<style>
+	.resume-header {
+		margin-bottom: 1rem;
+	}
+	.headline {
+		margin-bottom: 0.25rem;
+		font-family: var(--font-serif);
+		font-size: 1.0625rem;
+	}
+	.contact {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 1rem;
+		color: var(--muted);
+		font-size: 0.9375rem;
+	}
+	.print {
+		padding: 0.4rem 0.8rem;
+		background: var(--surface);
+		color: var(--text);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		font: inherit;
+		font-size: 0.875rem;
+		cursor: pointer;
+	}
+	.print:hover {
+		border-color: var(--accent);
+	}
+	h2 {
+		margin-top: 2rem;
+		padding-bottom: 0.25rem;
+		border-bottom: 1px solid var(--border);
+	}
+	.role {
+		margin-top: 1.25rem;
+	}
+	.role h3 {
+		margin-bottom: 0.125rem;
+		font-size: 1.0625rem;
+	}
+	.role h3 .muted {
+		font-weight: 400;
+	}
+	.when {
+		margin-bottom: 0.5rem;
+		color: var(--muted);
+		font-size: 0.9375rem;
+	}
+	.role ul {
+		padding-left: 1.25rem;
+	}
+	.role li {
+		margin-bottom: 0.35rem;
+	}
+	dl {
+		margin: 0;
+	}
+	dt {
+		margin-top: 0.75rem;
+		font-weight: 600;
+	}
+	dd {
+		margin: 0;
+	}
+	.plain {
+		list-style: none;
+		padding: 0;
+	}
+	.plain li {
+		margin-bottom: 0.35rem;
+	}
+
+	@media print {
+		:global(header:not(.resume-header)),
+		:global(footer),
+		:global(.skip-link),
+		.print {
+			display: none;
+		}
+		:global(body) {
+			background: #fff;
+			color: #000;
+			font-size: 10.5pt;
+			line-height: 1.4;
+		}
+		:global(main) {
+			padding: 0;
+			max-width: none;
+		}
+		a {
+			color: #000;
+			text-decoration: none;
+		}
+		h2 {
+			margin-top: 1rem;
+			break-after: avoid;
+		}
+		.role {
+			break-inside: avoid;
+		}
+	}
+</style>

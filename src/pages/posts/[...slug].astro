@@ -1,0 +1,53 @@
+---
+import { render } from 'astro:content';
+import FormattedDate from '../../components/FormattedDate.astro';
+import Base from '../../layouts/Base.astro';
+import { getPublishedPosts, type Post, readingMinutes } from '../../lib/posts';
+
+export async function getStaticPaths() {
+	const posts = await getPublishedPosts();
+	return posts.map((post) => ({
+		params: { slug: post.id },
+		props: post,
+	}));
+}
+type Props = Post;
+
+const post = Astro.props;
+const { title, description, pubDate, updatedDate, draft } = post.data;
+const { Content } = await render(post);
+---
+
+<Base title={title} description={description} type="article" narrow>
+	<article class="prose">
+		<header>
+			<h1>{title}</h1>
+			<p class="meta">
+				<FormattedDate date={pubDate} /> · {readingMinutes(post)} min read
+				{
+					updatedDate && (
+						<>
+							{' '}
+							· Updated <FormattedDate date={updatedDate} />
+						</>
+					)
+				}
+				{draft && <strong> · Draft</strong>}
+			</p>
+		</header>
+		<Content />
+	</article>
+	<hr />
+	<p class="muted">
+		<a href="/posts/">More posts</a> · <a href="/rss.xml">RSS</a>
+	</p>
+</Base>
+<style>
+	header {
+		margin-bottom: 2rem;
+	}
+	.meta {
+		color: var(--muted);
+		font-size: 0.9375rem;
+	}
+</style>

@@ -1,0 +1,19 @@
+---
+interface Props {
+	date: Date;
+}
+
+const { date } = Astro.props;
+---
+
+<time datetime={date.toISOString()}>
+	{
+		// Front-matter dates parse as UTC midnight; formatting in local time would show the previous day west of UTC.
+		date.toLocaleDateString('en-us', {
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric',
+			timeZone: 'UTC',
+		})
+	}
+</time>

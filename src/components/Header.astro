@@ -1,0 +1,50 @@
+---
+import { SITE_TITLE } from '../consts';
+import { getPublishedPosts } from '../lib/posts';
+import HeaderLink from './HeaderLink.astro';
+
+// The Posts link appears once there is something to read.
+const hasPosts = (await getPublishedPosts()).length > 0;
+---
+
+<header>
+	<nav aria-label="Main">
+		<a class="name" href="/">{SITE_TITLE}</a>
+		<ul>
+			{hasPosts && <li><HeaderLink href="/posts/">Posts</HeaderLink></li>}
+			<li><HeaderLink href="/projects/">Projects</HeaderLink></li>
+			<li><HeaderLink href="/about/">About</HeaderLink></li>
+			<li><HeaderLink href="/resume/">Résumé</HeaderLink></li>
+			<li><HeaderLink href="/contact/">Contact</HeaderLink></li>
+		</ul>
+	</nav>
+</header>
+<style>
+	header {
+		border-bottom: 1px solid var(--border);
+		background: var(--surface);
+	}
+	nav {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.25rem 1.5rem;
+		max-width: var(--wide);
+		margin: 0 auto;
+		padding: 0.75rem var(--gutter);
+	}
+	.name {
+		color: var(--text);
+		font-weight: 700;
+		text-decoration: none;
+	}
+	ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 1.25rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+</style>

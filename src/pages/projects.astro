@@ -1,0 +1,29 @@
+---
+import ProjectCard from '../components/ProjectCard.astro';
+import { projects } from '../data/projects';
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+	title="Projects"
+	description="Projects on clinical data and AI-assisted development, each with the question it asked and what the answer turned out to be."
+	narrow
+>
+	<h1>Projects</h1>
+	<p class="lede">
+		Each project starts from a question. Each README reports the answer, including when the answer went against the
+		idea. All of them run on synthetic or public data.
+	</p>
+	<ul>
+		{projects.map((project) => <ProjectCard project={project} detailed />)}
+	</ul>
+</Base>
+<style>
+	ul {
+		display: grid;
+		gap: 1rem;
+		list-style: none;
+		margin: 1.5rem 0 0;
+		padding: 0;
+	}
+</style>

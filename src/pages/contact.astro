@@ -1,0 +1,13 @@
+---
+import { EMAIL, GITHUB_URL, LINKEDIN_URL } from '../consts';
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Contact" description="How to reach Jagnyesh Patra." narrow>
+	<h1>Contact</h1>
+	<p>Email reaches me fastest: <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.</p>
+	<p>
+		I'm also on <a href={LINKEDIN_URL}>LinkedIn</a>. For a bug or question about one of my projects, open an issue in
+		its repository on <a href={GITHUB_URL}>GitHub</a>.
+	</p>
+</Base>

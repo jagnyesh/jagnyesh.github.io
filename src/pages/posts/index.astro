@@ -1,0 +1,53 @@
+---
+import FormattedDate from '../../components/FormattedDate.astro';
+import Base from '../../layouts/Base.astro';
+import { getPublishedPosts, readingMinutes } from '../../lib/posts';
+
+const posts = await getPublishedPosts();
+---
+
+<Base title="Posts" description="Writing on clinical data standards, FHIR and OMOP, and evaluating AI in healthcare." narrow>
+	<h1>Posts</h1>
+	{
+		posts.length === 0 ? (
+			<p class="muted">
+				No posts yet. Subscribe to the <a href="/rss.xml">RSS feed</a> to get new posts.
+			</p>
+		) : (
+			<ol>
+				{posts.map((post) => (
+					<li>
+						<a href={`/posts/${post.id}/`}>{post.data.title}</a>
+						<p class="meta">
+							<FormattedDate date={post.data.pubDate} /> · {readingMinutes(post)} min read
+						</p>
+						<p>{post.data.description}</p>
+					</li>
+				))}
+			</ol>
+		)
+	}
+</Base>
+<style>
+	ol {
+		list-style: none;
+		margin: 1.5rem 0 0;
+		padding: 0;
+	}
+	li {
+		padding: 1.25rem 0;
+		border-top: 1px solid var(--border);
+	}
+	li > a {
+		font-size: 1.125rem;
+		font-weight: 600;
+	}
+	.meta {
+		margin: 0.25rem 0;
+		color: var(--muted);
+		font-size: 0.875rem;
+	}
+	li p:last-child {
+		margin: 0;
+	}
+</style>

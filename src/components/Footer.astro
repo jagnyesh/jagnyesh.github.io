@@ -1,0 +1,48 @@
+---
+import { GITHUB_URL, LINKEDIN_URL, SITE_TITLE } from '../consts';
+
+const today = new Date();
+---
+
+<footer>
+	<div class="inner">
+		<p>&copy; {today.getFullYear()} {SITE_TITLE}</p>
+		<ul>
+			<li><a href="/rss.xml">RSS</a></li>
+			<li><a href={GITHUB_URL}>GitHub</a></li>
+			<li><a href={LINKEDIN_URL}>LinkedIn</a></li>
+		</ul>
+	</div>
+</footer>
+<style>
+	footer {
+		border-top: 1px solid var(--border);
+		color: var(--muted);
+		font-size: 0.9375rem;
+	}
+	.inner {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 0.5rem 1.5rem;
+		max-width: var(--wide);
+		margin: 0 auto;
+		padding: 1.5rem var(--gutter) 3rem;
+	}
+	p {
+		margin: 0;
+	}
+	ul {
+		display: flex;
+		gap: 1.25rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	a {
+		color: var(--muted);
+	}
+	a:hover {
+		color: var(--text);
+	}
+</style>
