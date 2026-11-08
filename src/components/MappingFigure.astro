@@ -1,40 +1,208 @@
 ---
-// One synthetic patient as an HL7 v2 PID segment and as the FHIR R4 Patient it maps to.
-// The numbered names follow Synthea's convention, so the record reads as synthetic at a glance.
+// One synthetic patient seen three ways: the HL7 v2 PID segment as sent, its fields laid out,
+// and the FHIR R4 Patient it maps to. Values keep a data-key across views so they can move
+// from one view to the next. The numbered names follow Synthea's convention, so the record
+// reads as synthetic at a glance.
+const views = [
+	{ value: 'message', label: 'Message' },
+	{ value: 'fields', label: 'Fields' },
+	{ value: 'fhir', label: 'FHIR' },
+];
 ---
 
-<figure class="mapping">
+<figure class="mapping" data-mapping>
 	<div class="panel">
-		<p class="label">HL7 v2 PID segment</p>
-		{/* The wbr tags let a narrow screen wrap between fields instead of inside a value. */}
-		<pre><code>PID|<wbr />1|<wbr />|<wbr /><mark class="f1">100234^^^GEN^MR</mark>|<wbr />|<wbr /><mark class="f2">Rivera954^Ana972^M</mark>|<wbr />|<wbr /><mark class="f3">19740312</mark>|<wbr /><mark class="f4">F</mark>|<wbr />…</code></pre>
-	</div>
-	<div class="panel fhir">
-		<p class="label">FHIR R4 Patient</p>
-		<pre><code>{`{
+		<div class="bar">
+			<fieldset class="views">
+				<legend class="sr-only">View the record as</legend>
+				{
+					views.map((view, i) => (
+						<label>
+							<input type="radio" name="mapping-view" value={view.value} checked={i === 0} />
+							{view.label}
+						</label>
+					))
+				}
+			</fieldset>
+			<span class="tag">Synthetic patient</span>
+		</div>
+
+		<div class="stage">
+			<div class="view" data-view="message">
+				<p class="label">HL7 v2 ADT^A04 message, patient registration</p>
+				{/* The wbr tags let a narrow screen wrap between fields instead of inside a value. */}
+				<pre class="hl7"><code><span class="dim">MSH|^~\&amp;|<wbr />GEN|<wbr />GEN|||<wbr />20260301||<wbr />ADT^A04|<wbr />…</span>
+<span class="dim">EVN|A04|<wbr />20260301|<wbr />…</span>
+PID|<wbr />1|<wbr />|<wbr /><button type="button" class="field f1" data-field="f1"><span data-key="id">100234</span>^^^<span data-key="aa">GEN</span>^<span data-key="idtype">MR</span></button>|<wbr />|<wbr /><button type="button" class="field f2" data-field="f2"><span data-key="family">Rivera954</span>^<span data-key="given1">Ana972</span>^<span data-key="given2">M</span></button>|<wbr />|<wbr /><button type="button" class="field f3" data-field="f3"><span data-key="dob">19740312</span></button>|<wbr /><button type="button" class="field f4" data-field="f4"><span data-key="sex">F</span></button>|<wbr />…
+<span class="dim">PV1|1|<wbr />O|<wbr />…</span></code></pre>
+			</div>
+
+			<div class="view" data-view="fields">
+				<p class="label">The same segment, field by field</p>
+				<ol class="xray">
+					<li>
+						<button type="button" class="field f1" data-field="f1">
+							<span class="pid">PID-3</span><span class="what">Patient identifier</span>
+							<span class="parts"><span data-key="id">100234</span><span class="caret">^^^</span><span data-key="aa">GEN</span><span class="caret">^</span><span data-key="idtype">MR</span></span>
+						</button>
+					</li>
+					<li>
+						<button type="button" class="field f2" data-field="f2">
+							<span class="pid">PID-5</span><span class="what">Patient name</span>
+							<span class="parts"><span data-key="family">Rivera954</span><span class="caret">^</span><span data-key="given1">Ana972</span><span class="caret">^</span><span data-key="given2">M</span></span>
+						</button>
+					</li>
+					<li>
+						<button type="button" class="field f3" data-field="f3">
+							<span class="pid">PID-7</span><span class="what">Date of birth</span>
+							<span class="parts"><span data-key="dob">19740312</span></span>
+						</button>
+					</li>
+					<li>
+						<button type="button" class="field f4" data-field="f4">
+							<span class="pid">PID-8</span><span class="what">Administrative sex</span>
+							<span class="parts"><span data-key="sex">F</span></span>
+						</button>
+					</li>
+				</ol>
+			</div>
+
+			<div class="view" data-view="fhir">
+				<p class="label">FHIR R4 Patient</p>
+				<pre><code>{`{
   "resourceType": "Patient",
-`}<span class="identifier">{`  "identifier": [{
-    "type": { "text": "MR" },
-    "value": `}<mark class="f1">"100234"</mark>{`
+  "identifier": [{
+    "type": { "text": `}<button type="button" class="field f1" data-field="f1"><span data-key="idtype">"MR"</span></button>{` },
+    "value": `}<button type="button" class="field f1" data-field="f1"><span data-key="id">"100234"</span></button>{`
   }],
-`}</span>{`  "name": [{
-    "family": `}<mark class="f2">"Rivera954"</mark>{`,
-    "given": [`}<mark class="f2">"Ana972"</mark>{`, `}<mark class="f2">"M"</mark>{`]
+  "name": [{
+    "family": `}<button type="button" class="field f2" data-field="f2"><span data-key="family">"Rivera954"</span></button>{`,
+    "given": [`}<button type="button" class="field f2" data-field="f2"><span data-key="given1">"Ana972"</span></button>{`, `}<button type="button" class="field f2" data-field="f2"><span data-key="given2">"M"</span></button>{`]
   }],
-  "birthDate": `}<mark class="f3">"1974-03-12"</mark>{`,
-  "gender": `}<mark class="f4">"female"</mark>{`
+  "birthDate": `}<button type="button" class="field f3" data-field="f3"><span data-key="dob">"1974-03-12"</span></button>{`,
+  "gender": `}<button type="button" class="field f4" data-field="f4"><span data-key="sex">"female"</span></button>{`
 }`}</code></pre>
+			</div>
+		</div>
 	</div>
-	<figcaption>
-		<ul class="legend">
-			<li><span class="key f1">PID-3</span> identifier</li>
-			<li><span class="key f2">PID-5</span> name</li>
-			<li><span class="key f3">PID-7</span> birthDate, reformatted</li>
-			<li><span class="key f4">PID-8</span> gender, F mapped to female</li>
-		</ul>
-		<p>A synthetic patient. The mapping standard decides each conversion, such as the date format and the gender code.</p>
+
+	<figcaption aria-live="polite">
+		<p class="note" data-note="">A synthetic patient. Select a highlighted value to see the rule that maps it.</p>
+		<p class="note" data-note="f1" hidden>
+			<strong>PID-3 becomes identifier.</strong> 100234 becomes the value, and MR, the code for a medical record number,
+			becomes the type. GEN, the assigning authority, would set the system, which this figure leaves out.
+		</p>
+		<p class="note" data-note="f2" hidden>
+			<strong>PID-5 becomes name.</strong> The parts arrive as family, given, and second given name. Both given names go
+			into the given list, in order.
+		</p>
+		<p class="note" data-note="f3" hidden>
+			<strong>PID-7 becomes birthDate.</strong> HL7 v2 writes the date as 19740312. FHIR writes it as 1974-03-12, so the
+			mapping adds the hyphens.
+		</p>
+		<p class="note" data-note="f4" hidden>
+			<strong>PID-8 becomes gender.</strong> F becomes female, and U becomes unknown. HL7 v2 has more sex codes than FHIR
+			has genders, so a mapping standard decides where each one goes.
+		</p>
 	</figcaption>
 </figure>
+
+<script>
+	const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+	for (const figure of document.querySelectorAll<HTMLElement>('[data-mapping]')) {
+		const radios = [...figure.querySelectorAll<HTMLInputElement>('input[name="mapping-view"]')];
+		const viewEl = (name: string) => figure.querySelector<HTMLElement>(`.view[data-view="${name}"]`)!;
+		let current = radios.find((r) => r.checked)?.value ?? 'message';
+		let touched = false;
+
+		// Every view stays laid out (only hidden), so a value's old and new positions can both be measured.
+		function move(from: string, to: string) {
+			if (from === to || reduceMotion.matches) return;
+			const before = new Map<string, DOMRect>();
+			for (const el of viewEl(from).querySelectorAll<HTMLElement>('[data-key]')) {
+				before.set(el.dataset.key!, el.getBoundingClientRect());
+			}
+			const target = viewEl(to);
+			target.classList.add('settling');
+			void target.offsetWidth;
+			target.classList.remove('settling');
+			for (const el of target.querySelectorAll('.label, .pid, .what, .caret, .dim')) {
+				el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 320, delay: 140, easing: EASE, fill: 'backwards' });
+			}
+			target.querySelectorAll<HTMLElement>('[data-key]').forEach((el, i) => {
+				const old = before.get(el.dataset.key!);
+				if (!old) return;
+				const now = el.getBoundingClientRect();
+				el.animate(
+					[{ transform: `translate(${old.left - now.left}px, ${old.top - now.top}px)` }, { transform: 'none' }],
+					{ duration: 560, delay: i * 35, easing: EASE, fill: 'backwards' },
+				);
+			});
+		}
+
+		function show(name: string) {
+			const radio = radios.find((r) => r.value === name);
+			if (!radio) return;
+			radio.checked = true;
+			move(current, name);
+			current = name;
+		}
+
+		figure.addEventListener('change', (event) => {
+			const input = event.target as HTMLInputElement;
+			if (input.name !== 'mapping-view') return;
+			touched = true;
+			move(current, input.value);
+			current = input.value;
+		});
+
+		function select(field: string) {
+			figure.dataset.field = field;
+			for (const button of figure.querySelectorAll<HTMLElement>('.field')) {
+				const on = button.dataset.field === field;
+				button.classList.toggle('on', on);
+				button.setAttribute('aria-pressed', String(on));
+			}
+			for (const note of figure.querySelectorAll<HTMLElement>('.note')) {
+				note.hidden = note.dataset.note !== field;
+			}
+		}
+
+		figure.addEventListener('click', (event) => {
+			const button = (event.target as Element).closest<HTMLElement>('.field');
+			if (!button) return;
+			touched = true;
+			select(figure.dataset.field === button.dataset.field ? '' : button.dataset.field!);
+		});
+		figure.addEventListener('keydown', (event) => {
+			if (event.key === 'Escape' && figure.dataset.field) select('');
+		});
+		select('');
+
+		// Play the three views once, the first time the figure is on screen, so visitors who never click still see the
+		// conversion. Any interaction stops it.
+		for (const type of ['pointerdown', 'keydown', 'focusin']) {
+			figure.addEventListener(type, () => (touched = true));
+		}
+		if (!reduceMotion.matches && 'IntersectionObserver' in window) {
+			const observer = new IntersectionObserver(
+				(entries) => {
+					if (!entries.some((e) => e.isIntersecting)) return;
+					observer.disconnect();
+					const steps = ['fields', 'fhir'];
+					steps.forEach((name, i) => {
+						setTimeout(() => !touched && show(name), 1100 + i * 1900);
+					});
+				},
+				{ threshold: 0.6 },
+			);
+			observer.observe(figure);
+		}
+	}
+</script>
+
 <style>
 	.mapping {
 		display: grid;
@@ -42,21 +210,88 @@
 		margin: 0;
 	}
 	.panel {
-		padding: 1rem 1.25rem;
+		padding: 0.75rem 1.25rem 1.25rem;
 		background: var(--surface);
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 	}
-	.fhir {
-		margin-left: 2rem;
+	.bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-bottom: 1rem;
 	}
+	.views {
+		display: inline-flex;
+		gap: 2px;
+		margin: 0;
+		padding: 3px;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+	}
+	.views label {
+		position: relative;
+		padding: 0.25rem 0.75rem;
+		border-radius: 5px;
+		color: var(--secondary);
+		font-size: 0.8125rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition:
+			background-color 150ms var(--ease),
+			color 150ms var(--ease);
+	}
+	.views label:hover {
+		color: var(--text);
+	}
+	.views input {
+		position: absolute;
+		inset: 0;
+		margin: 0;
+		opacity: 0;
+		cursor: pointer;
+	}
+	.views label:has(:checked) {
+		background: var(--raised);
+		color: var(--text);
+		box-shadow: inset 0 0 0 1px var(--border);
+	}
+	.views label:has(:focus-visible) {
+		outline: 2px solid var(--accent);
+		outline-offset: 1px;
+	}
+	.tag,
 	.label {
-		margin: 0 0 0.5rem;
 		color: var(--muted);
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
 	}
+	.label {
+		margin: 0 0 0.5rem;
+	}
+
+	/* All three views share one grid cell, so the stage keeps the height of the tallest and nothing below it jumps. */
+	.stage {
+		display: grid;
+	}
+	.view {
+		grid-area: 1 / 1;
+		align-self: center;
+		visibility: hidden;
+		transition: color 320ms 140ms var(--ease);
+	}
+	.view.settling {
+		color: transparent;
+		transition: none;
+	}
+	.mapping:has(input[value='message']:checked) [data-view='message'],
+	.mapping:has(input[value='fields']:checked) [data-view='fields'],
+	.mapping:has(input[value='fhir']:checked) [data-view='fhir'] {
+		visibility: visible;
+	}
+
 	pre {
 		margin: 0;
 		padding: 0;
@@ -64,77 +299,131 @@
 		background: none;
 		overflow: visible;
 		font-size: 0.8125rem;
-		line-height: 1.6;
+		line-height: 1.7;
 		white-space: pre-wrap;
 		overflow-wrap: anywhere;
 	}
-	mark {
-		color: inherit;
-		border-radius: 4px;
-		padding: 0 0.125rem;
-		box-decoration-break: clone;
-		-webkit-box-decoration-break: clone;
+	.hl7 {
+		line-height: 2;
 	}
+	.dim {
+		color: var(--muted);
+	}
+
 	.f1 {
-		background: color-mix(in srgb, var(--field-1) var(--field-alpha), transparent);
-		box-shadow: inset 0 -2px 0 var(--field-1);
+		--c: var(--field-1);
 	}
 	.f2 {
-		background: color-mix(in srgb, var(--field-2) var(--field-alpha), transparent);
-		box-shadow: inset 0 -2px 0 var(--field-2);
+		--c: var(--field-2);
 	}
 	.f3 {
-		background: color-mix(in srgb, var(--field-3) var(--field-alpha), transparent);
-		box-shadow: inset 0 -2px 0 var(--field-3);
+		--c: var(--field-3);
 	}
 	.f4 {
-		background: color-mix(in srgb, var(--field-4) var(--field-alpha), transparent);
-		box-shadow: inset 0 -2px 0 var(--field-4);
+		--c: var(--field-4);
 	}
+	button.field {
+		margin: 0;
+		padding: 0;
+		border: 0;
+		border-radius: 4px;
+		background: none;
+		color: inherit;
+		font: inherit;
+		text-align: inherit;
+		cursor: pointer;
+	}
+	button.field:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+	[data-key] {
+		display: inline-block;
+		padding: 0 0.125rem;
+		border-radius: 4px;
+		color: var(--text);
+		background: color-mix(in srgb, var(--c) var(--field-alpha), transparent);
+		box-shadow: inset 0 -2px 0 var(--c);
+		transition: background-color 150ms var(--ease);
+	}
+	.field:hover [data-key],
+	.field.on [data-key] {
+		background: color-mix(in srgb, var(--c) calc(var(--field-alpha) * 2.4), transparent);
+	}
+	.mapping[data-field]:not([data-field='']) .field:not(.on) [data-key] {
+		background: transparent;
+		box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--c) 50%, transparent);
+	}
+
+	.xray {
+		display: grid;
+		gap: 0.25rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-size: 0.875rem;
+	}
+	.xray button.field {
+		display: grid;
+		grid-template-columns: 3.75rem minmax(0, 1fr) auto;
+		align-items: baseline;
+		gap: 0.25rem 0.75rem;
+		width: 100%;
+		padding: 0.375rem 0.5rem;
+		border-radius: var(--radius-sm);
+	}
+	.xray button.field:hover,
+	.xray button.field.on {
+		background: var(--raised);
+	}
+	.pid,
+	.parts {
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+	}
+	.pid {
+		color: var(--muted);
+	}
+	.what {
+		color: var(--secondary);
+	}
+	.caret {
+		margin: 0 0.25rem;
+		color: var(--muted);
+	}
+
 	figcaption {
-		margin-left: 2rem;
+		min-height: 3.25rem;
 		color: var(--muted);
 		font-size: 0.8125rem;
 	}
-	.legend {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0.25rem 1rem;
-		list-style: none;
-		margin: 0.25rem 0 0.5rem;
-		padding: 0;
-		color: var(--secondary);
-	}
-	.key {
-		display: inline-block;
-		margin-right: 0.5rem;
-		padding: 0 0.25rem;
-		border-radius: 4px;
-		color: var(--text);
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-	}
-	figcaption p {
+	.note {
 		margin: 0;
 	}
+	.note strong {
+		color: var(--text);
+		font-weight: 500;
+	}
+
 	@media (prefers-color-scheme: dark) {
 		.panel {
 			box-shadow: none;
 		}
 	}
-	/* On phones the figure keeps three mappings and drops the identifier and the legend, so the projects stay close. */
+	/* On phones each field's parts drop under its name, so long identifiers never squeeze the label. The caption
+	   already says the patient is synthetic, so the tag goes. */
 	@media (max-width: 30rem) {
-		.fhir,
-		figcaption {
-			margin-left: 0;
+		.panel {
+			padding: 0.75rem 1rem 1rem;
 		}
-		.identifier,
-		.legend {
+		.tag {
 			display: none;
 		}
-		pre mark.f1 {
-			background: none;
-			box-shadow: none;
+		.xray button.field {
+			grid-template-columns: 3.75rem minmax(0, 1fr);
+		}
+		.parts {
+			grid-column: 2;
 		}
 	}
 </style>
