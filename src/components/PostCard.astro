@@ -11,19 +11,26 @@ const { post } = Astro.props;
 
 <li class="card">
 	<h3><a href={`/posts/${post.id}/`}>{post.data.title}</a></h3>
-	<p class="meta"><FormattedDate date={post.data.pubDate} /> · {readingMinutes(post)} min read</p>
-	<p>{post.data.description}</p>
+	<p class="meta"><FormattedDate date={post.data.pubDate} /><span>{readingMinutes(post)} min read</span></p>
+	<p class="description">{post.data.description}</p>
 </li>
 <style>
 	.card {
 		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
 		padding: 1.25rem;
 		background: var(--surface);
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
+		transition: border-color 150ms var(--ease);
 	}
 	.card:hover {
-		border-color: var(--accent);
+		border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+	}
+	h3 {
+		margin: 0;
 	}
 	h3 a {
 		color: var(--text);
@@ -35,13 +42,9 @@ const { post } = Astro.props;
 		position: absolute;
 		inset: 0;
 	}
-	.meta {
-		margin-bottom: 0.5rem;
-		color: var(--muted);
-		font-size: 0.875rem;
-	}
-	p:last-child {
+	.description {
 		margin: 0;
+		color: var(--secondary);
 		font-size: 0.9375rem;
 	}
 </style>

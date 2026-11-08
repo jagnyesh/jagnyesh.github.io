@@ -6,16 +6,16 @@ import Base from '../layouts/Base.astro';
 
 <Base
 	title="Projects"
-	description="Projects on clinical data and AI-assisted development, each with the question it asked and what the answer turned out to be."
+	description="Projects on clinical data and AI-assisted development, each with the question it asked and the answer."
 	narrow
 >
 	<h1>Projects</h1>
 	<p class="lede">
-		Each project starts from a question. Each README reports the answer, including when the answer went against the
-		idea. All of them run on synthetic or public data.
+		Each project starts from a question, and its README reports the answer, even when the answer went against my
+		hypothesis. All of them run on synthetic or public data.
 	</p>
 	<ul>
-		{projects.map((project) => <ProjectCard project={project} detailed />)}
+		{projects.map((project) => <ProjectCard project={project} variant="detailed" />)}
 	</ul>
 </Base>
 <style>

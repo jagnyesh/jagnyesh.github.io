@@ -1,35 +1,50 @@
 :root {
-	--bg: #fbfbf9;
+	--bg: #fbfaf7;
 	--surface: #ffffff;
-	--text: #1c2024;
-	--muted: #59626d;
-	--border: #e2e4e7;
+	--raised: #f3f2ee;
+	--text: #1c1f22;
+	--secondary: #4f565e;
+	--muted: #6b7178;
+	--border: color-mix(in srgb, var(--text) 10%, transparent);
 	--accent: #0e6b6b;
 	--accent-strong: #0a5252;
-	--code-bg: #f3f4f2;
 
-	--font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-	--font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Charter, Georgia, serif;
-	--font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	/* Field colors for the HL7 v2 to FHIR figure. Each pair of marks shares one hue. */
+	--field-1: #0e6b6b;
+	--field-2: #9a5b00;
+	--field-3: #2d5aa8;
+	--field-4: #a83a55;
+	--field-alpha: 13%;
 
-	--wide: 64rem;
+	--font-sans: var(--font-plex-sans), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	--font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+	--wide: 72rem;
 	--narrow: 42rem;
-	--gutter: 1rem;
-	--radius: 8px;
+	--gutter: clamp(1rem, 4vw, 2rem);
+	--radius: 12px;
+	--radius-sm: 8px;
+	--ease: cubic-bezier(0.22, 1, 0.36, 1);
 
 	color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
 	:root {
-		--bg: #121416;
-		--surface: #1a1d20;
-		--text: #e5e7e9;
-		--muted: #a2aab3;
-		--border: #2d3237;
+		--bg: #131416;
+		--surface: #1a1c1f;
+		--raised: #222428;
+		--text: #e9e7e2;
+		--secondary: #b3b1ab;
+		--muted: #94928c;
 		--accent: #63c5c5;
 		--accent-strong: #8fd8d8;
-		--code-bg: #1f2326;
+
+		--field-1: #63c5c5;
+		--field-2: #e0a64d;
+		--field-3: #86a9ec;
+		--field-4: #e58aa0;
+		--field-alpha: 22%;
 	}
 }
 
@@ -48,8 +63,8 @@ body {
 	background: var(--bg);
 	color: var(--text);
 	font-family: var(--font-sans);
-	font-size: 1.0625rem;
-	line-height: 1.6;
+	font-size: 1rem;
+	line-height: 1.625;
 	overflow-wrap: break-word;
 }
 
@@ -60,7 +75,8 @@ main {
 	padding: 2.5rem var(--gutter) 4rem;
 }
 
-main.narrow {
+/* Narrow pages keep the reading column but share the header's left edge. */
+main.narrow > * {
 	max-width: var(--narrow);
 }
 
@@ -68,12 +84,14 @@ h1,
 h2,
 h3,
 h4 {
+	font-weight: 500;
 	line-height: 1.25;
 	margin: 0 0 0.5rem;
 }
 
 h1 {
 	font-size: 2rem;
+	line-height: 1.15;
 	letter-spacing: -0.01em;
 }
 
@@ -92,9 +110,14 @@ ol {
 	margin: 0 0 1rem;
 }
 
+strong {
+	font-weight: 600;
+}
+
 a {
 	color: var(--accent);
 	text-underline-offset: 0.15em;
+	transition: color 150ms var(--ease);
 }
 
 a:hover {
@@ -116,18 +139,23 @@ code,
 kbd,
 pre {
 	font-family: var(--font-mono);
-	font-size: 0.9em;
+	font-size: 0.875em;
 }
 
 :not(pre) > code {
-	background: var(--code-bg);
-	padding: 0.1em 0.3em;
+	background: var(--raised);
+	padding: 0.125em 0.25em;
 	border-radius: 4px;
+}
+
+/* pre already sets the smaller size; without this, code inside it shrinks a second time. */
+pre code {
+	font-size: inherit;
 }
 
 pre {
 	padding: 1rem;
-	border-radius: var(--radius);
+	border-radius: var(--radius-sm);
 	border: 1px solid var(--border);
 	overflow-x: auto;
 	line-height: 1.5;
@@ -151,23 +179,28 @@ pre {
 blockquote {
 	margin: 0 0 1rem;
 	padding-left: 1rem;
-	border-left: 3px solid var(--border);
-	color: var(--muted);
+	border-left: 2px solid var(--border);
+	color: var(--secondary);
 }
 
 table {
 	width: 100%;
 	border-collapse: collapse;
 	margin: 0 0 1rem;
-	font-size: 0.95em;
+	font-size: 0.9375em;
+	font-variant-numeric: tabular-nums;
 }
 
 th,
 td {
 	text-align: left;
-	padding: 0.4rem 0.6rem;
+	padding: 0.5rem 0.75rem;
 	border-bottom: 1px solid var(--border);
 	vertical-align: top;
+}
+
+th {
+	font-weight: 500;
 }
 
 img {
@@ -181,11 +214,39 @@ img {
 
 .lede {
 	font-size: 1.125rem;
-	color: var(--muted);
+	line-height: 1.6;
+	color: var(--secondary);
+}
+
+/* Long-form text reads best near 70 characters a line; the 42rem column gives about 85. */
+main.narrow > .prose {
+	max-width: 36rem;
 }
 
 .prose h2 {
 	margin-top: 2.25rem;
+}
+
+/* The signature: HL7 v2's field separator between items of a meta line. */
+.meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 0.5rem;
+	margin: 0;
+	color: var(--muted);
+	font-family: var(--font-mono);
+	font-size: 0.8125rem;
+	font-variant-numeric: tabular-nums;
+}
+
+/* The empty alt text after the slash keeps screen readers from announcing each pipe. */
+.meta > * + *::before {
+	content: '|' / '';
+	/* inline-block stops the parent link's underline from running under the pipe. */
+	display: inline-block;
+	margin-right: 0.5rem;
+	color: color-mix(in srgb, var(--text) 30%, transparent);
 }
 
 .sr-only {
@@ -207,7 +268,7 @@ img {
 	padding: 0.5rem 0.75rem;
 	background: var(--surface);
 	border: 1px solid var(--border);
-	border-radius: var(--radius);
+	border-radius: var(--radius-sm);
 	z-index: 10;
 }
 
@@ -224,8 +285,10 @@ img {
 	padding: 0;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-	a {
-		transition: color 0.15s ease;
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition: none !important;
 	}
 }

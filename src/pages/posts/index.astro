@@ -19,7 +19,8 @@ const posts = await getPublishedPosts();
 					<li>
 						<a href={`/posts/${post.id}/`}>{post.data.title}</a>
 						<p class="meta">
-							<FormattedDate date={post.data.pubDate} /> · {readingMinutes(post)} min read
+							<FormattedDate date={post.data.pubDate} />
+							<span>{readingMinutes(post)} min read</span>
 						</p>
 						<p>{post.data.description}</p>
 					</li>
@@ -40,12 +41,10 @@ const posts = await getPublishedPosts();
 	}
 	li > a {
 		font-size: 1.125rem;
-		font-weight: 600;
+		font-weight: 500;
 	}
 	.meta {
-		margin: 0.25rem 0;
-		color: var(--muted);
-		font-size: 0.875rem;
+		margin: 0.25rem 0 0.5rem;
 	}
 	li p:last-child {
 		margin: 0;

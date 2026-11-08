@@ -1,16 +1,15 @@
 ---
 import { EMAIL, GITHUB_URL, LINKEDIN_URL, SITE_TITLE } from '../consts';
-import { certifications, education, experience, headline, location, skills, summary } from '../data/resume';
+import { certifications, education, experience, location, skills, summary } from '../data/resume';
 import Base from '../layouts/Base.astro';
 
 const bareUrl = (url: string) => url.replace(/^https:\/\/(www\.)?/, '');
 ---
 
-<Base title="Résumé" description={`Résumé of ${SITE_TITLE}: clinical informatics, clinical data governance and standards, canonical data models and data quality.`} narrow>
+<Base title="Résumé" description={`Résumé of ${SITE_TITLE}, covering clinical data standards, FHIR and OMOP, and clinical AI evaluation.`} narrow>
 	<header class="resume-header">
 		<h1>{SITE_TITLE}</h1>
-		<p class="headline">{headline.join(' · ')}</p>
-		<p class="contact">
+		<p class="meta contact">
 			<span>{location}</span>
 			<a href={`mailto:${EMAIL}`}>{EMAIL}</a>
 			<a href={LINKEDIN_URL}>{bareUrl(LINKEDIN_URL)}</a>
@@ -29,13 +28,14 @@ const bareUrl = (url: string) => url.replace(/^https:\/\/(www\.)?/, '');
 		{
 			experience.map((role) => (
 				<div class="role">
-					<h3>
-						{role.title} · {role.org}
-						{role.location && <span class="muted">, {role.location}</span>}
-					</h3>
-					<p class="when">
-						{role.unit && <>{role.unit} · </>}
-						{role.dates}
+					<h3>{role.title}</h3>
+					<p class="org">
+						{role.org}
+						{role.unit && <span class="muted">, {role.unit}</span>}
+					</p>
+					<p class="meta when">
+						{role.location && <span>{role.location}</span>}
+						<span>{role.dates}</span>
 					</p>
 					<ul>
 						{role.bullets.map((bullet) => (
@@ -67,7 +67,7 @@ const bareUrl = (url: string) => url.replace(/^https:\/\/(www\.)?/, '');
 			{
 				education.map((entry) => (
 					<li>
-						<strong>{entry.degree}</strong> · {entry.school}
+						<span class="degree">{entry.degree}</span>, {entry.school}
 					</li>
 				))
 			}
@@ -85,27 +85,20 @@ const bareUrl = (url: string) => url.replace(/^https:\/\/(www\.)?/, '');
 	.resume-header {
 		margin-bottom: 1rem;
 	}
-	.headline {
-		margin-bottom: 0.25rem;
-		font-family: var(--font-serif);
-		font-size: 1.0625rem;
-	}
 	.contact {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.25rem 1rem;
-		color: var(--muted);
-		font-size: 0.9375rem;
+		margin-bottom: 1rem;
 	}
 	.print {
-		padding: 0.4rem 0.8rem;
+		height: 2rem;
+		padding: 0 0.75rem;
 		background: var(--surface);
 		color: var(--text);
 		border: 1px solid var(--border);
-		border-radius: var(--radius);
+		border-radius: var(--radius-sm);
 		font: inherit;
 		font-size: 0.875rem;
 		cursor: pointer;
+		transition: border-color 150ms var(--ease);
 	}
 	.print:hover {
 		border-color: var(--accent);
@@ -119,29 +112,27 @@ const bareUrl = (url: string) => url.replace(/^https:\/\/(www\.)?/, '');
 		margin-top: 1.25rem;
 	}
 	.role h3 {
-		margin-bottom: 0.125rem;
+		margin-bottom: 0;
 		font-size: 1.0625rem;
 	}
-	.role h3 .muted {
-		font-weight: 400;
+	.org {
+		margin: 0;
 	}
 	.when {
-		margin-bottom: 0.5rem;
-		color: var(--muted);
-		font-size: 0.9375rem;
+		margin: 0.25rem 0 0.5rem;
 	}
 	.role ul {
 		padding-left: 1.25rem;
 	}
 	.role li {
-		margin-bottom: 0.35rem;
+		margin-bottom: 0.25rem;
 	}
 	dl {
 		margin: 0;
 	}
 	dt {
 		margin-top: 0.75rem;
-		font-weight: 600;
+		font-weight: 500;
 	}
 	dd {
 		margin: 0;
@@ -151,7 +142,10 @@ const bareUrl = (url: string) => url.replace(/^https:\/\/(www\.)?/, '');
 		padding: 0;
 	}
 	.plain li {
-		margin-bottom: 0.35rem;
+		margin-bottom: 0.25rem;
+	}
+	.degree {
+		font-weight: 500;
 	}
 
 	@media print {

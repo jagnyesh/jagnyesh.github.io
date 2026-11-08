@@ -1,4 +1,5 @@
 ---
+import MappingFigure from '../components/MappingFigure.astro';
 import PostCard from '../components/PostCard.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
@@ -9,17 +10,24 @@ import { getPublishedPosts } from '../lib/posts';
 const posts = await getPublishedPosts();
 const featured = posts.filter((post) => post.data.featured).slice(0, 6);
 const recent = posts.filter((post) => !featured.includes(post)).slice(0, 6);
+const [leadProject, ...otherProjects] = projects;
 ---
 
 <Base title={SITE_TITLE} description={SITE_DESCRIPTION}>
-	<h1 class="intro">
-		<em>I'm Jagnyesh Patra,</em> and I work on FHIR and OMOP data and on testing whether AI output holds up against
-		clinical data standards.
-	</h1>
-	<p class="lede">
-		Nine years across providers, payers, pharmacy benefit managers, and public health. I started in product roles,
-		and now I write the code and the evaluations too.
-	</p>
+	<section class="hero">
+		<div class="hero-text">
+			<h1>I map clinical data to FHIR and OMOP, and check AI output against those standards</h1>
+			<p class="lede">
+				I'm Jagnyesh Patra. I've spent nine years at providers, payers, pharmacy benefit managers, and public health
+				agencies. I started in product roles, and now I write the code and the evaluations too.
+			</p>
+			<p class="actions">
+				<a class="button" href="/projects/">What each project found</a>
+				<a href="/resume/">Résumé</a>
+			</p>
+		</div>
+		<MappingFigure />
+	</section>
 
 	{
 		featured.length > 0 && (
@@ -36,10 +44,10 @@ const recent = posts.filter((post) => !featured.includes(post)).slice(0, 6);
 
 	<section aria-labelledby="projects">
 		<h2 id="projects">Projects</h2>
-		<ul class="card-grid projects">
-			{projects.map((project) => <ProjectCard project={project} />)}
+		<ul class="projects">
+			<ProjectCard project={leadProject} variant="lead" />
+			{otherProjects.map((project) => <ProjectCard project={project} />)}
 		</ul>
-		<p class="more"><a href="/projects/">What each project found</a></p>
 	</section>
 
 	{
@@ -59,28 +67,75 @@ const recent = posts.filter((post) => !featured.includes(post)).slice(0, 6);
 	}
 </Base>
 <style>
-	.intro {
-		max-width: 46rem;
-		margin: 1rem 0;
-		font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.125rem);
-		font-weight: 500;
-		line-height: 1.3;
+	.hero {
+		display: grid;
+		gap: 3rem;
+		align-items: center;
+		padding: 2rem 0 1rem;
 	}
-	.intro em {
-		font-family: var(--font-serif);
-		color: var(--muted);
+	h1 {
+		font-size: clamp(2rem, 1.25rem + 2.4vw, 2.75rem);
+		line-height: 1.1;
+		letter-spacing: -0.02em;
+		margin-bottom: 1.25rem;
 	}
 	.lede {
-		max-width: 42rem;
+		max-width: 36rem;
+		margin-bottom: 2rem;
+	}
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 1rem 1.5rem;
+		margin: 0;
+	}
+	.button {
+		display: inline-flex;
+		align-items: center;
+		height: 2.75rem;
+		padding: 0 1.25rem;
+		background: var(--text);
+		color: var(--bg);
+		border-radius: 10px;
+		font-weight: 500;
+		text-decoration: none;
+		transition:
+			background-color 150ms var(--ease),
+			transform 150ms var(--ease);
+	}
+	.button:hover {
+		background: var(--accent-strong);
+		color: var(--bg);
+	}
+	.button:active {
+		transform: scale(0.98);
+	}
+	.projects {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 1rem;
+		list-style: none;
+		margin: 1rem 0 0;
+		padding: 0;
 	}
 	.more {
 		margin-top: 1rem;
 		font-size: 0.9375rem;
 	}
-	/* Four projects read better as a 2x2 grid than as three plus an orphan. */
-	@media (min-width: 40rem) {
+	@media (min-width: 48rem) {
 		.projects {
-			grid-template-columns: repeat(2, 1fr);
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+		.projects > :global(.lead) {
+			grid-column: 1 / -1;
+		}
+	}
+	@media (min-width: 64rem) {
+		.hero {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+			gap: 4rem;
+			padding: 4rem 0 2rem;
 		}
 	}
 </style>

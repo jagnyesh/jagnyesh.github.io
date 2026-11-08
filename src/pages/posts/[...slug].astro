@@ -23,16 +23,16 @@ const { Content } = await render(post);
 		<header>
 			<h1>{title}</h1>
 			<p class="meta">
-				<FormattedDate date={pubDate} /> · {readingMinutes(post)} min read
+				<FormattedDate date={pubDate} />
+				<span>{readingMinutes(post)} min read</span>
 				{
 					updatedDate && (
-						<>
-							{' '}
-							· Updated <FormattedDate date={updatedDate} />
-						</>
+						<span>
+							Updated <FormattedDate date={updatedDate} />
+						</span>
 					)
 				}
-				{draft && <strong> · Draft</strong>}
+				{draft && <strong>Draft</strong>}
 			</p>
 		</header>
 		<Content />
@@ -45,9 +45,5 @@ const { Content } = await render(post);
 <style>
 	header {
 		margin-bottom: 2rem;
-	}
-	.meta {
-		color: var(--muted);
-		font-size: 0.9375rem;
 	}
 </style>

@@ -1,53 +1,99 @@
 ---
 import { GITHUB_URL, LINKEDIN_URL } from '../consts';
 import Base from '../layouts/Base.astro';
+
+// One line per place keeps the page scannable; the résumé holds the full history.
+const work = [
+	{
+		dates: '2026–present',
+		org: 'Tufts Clinical and Translational Science Institute',
+		what: [
+			'I evaluate AI tools for development and data discovery. I also built a self-paced trainer that takes SQL analysts through OMOP data.',
+			'OMOP is the common data model that research networks use to put EHR data from different hospitals into the same tables and codes.',
+		],
+	},
+	{
+		dates: '2023–2025',
+		org: 'University of Illinois Chicago',
+		what: ['I designed an OMOP data layer that put data from several EHR systems into one standard representation.'],
+	},
+	{
+		dates: '2022',
+		org: 'CDC',
+		// COVID‑19 uses a non-breaking hyphen (U+2011) so the name never splits across two lines.
+		what: [
+			'I worked on federal and state data interoperability during COVID‑19 and contributed to USCDI data element proposals.',
+		],
+	},
+	{
+		dates: '2020–2023',
+		org: 'Optum',
+		what: [
+			'I set the mapping standards for turning HL7 v2 messages into FHIR resources, and eight business units adopted them. I also led development of Patient Access APIs certified for USCDI v1.',
+		],
+	},
+];
 ---
 
 <Base
 	title="About"
-	description="Jagnyesh Patra works on clinical data standards, FHIR and OMOP pipelines, and testing AI output against clinical data standards."
+	description="Jagnyesh Patra builds FHIR and OMOP pipelines and tests AI output against clinical data standards."
 	narrow
 >
 	<article class="prose">
 		<h1>About</h1>
-		<p>
-			I'm Jagnyesh Patra. I work at the Tufts Clinical and Translational Science Institute, where I evaluate AI tools
-			for development and data discovery. I also built a self-paced trainer that takes SQL analysts through OMOP data.
-			OMOP is the common data model that research networks use to put EHR data from different hospitals into one
-			shape.
-		</p>
-		<p>
-			For nine years I have worked where clinical documentation and payer data meet the systems that run on them. That
-			work has been at providers, payers, a pharmacy benefit manager, and the CDC. At Optum I set the mapping
-			standards for turning HL7 v2 messages into FHIR resources, and 8 business units adopted them. HL7 v2 is the
-			older message format most hospital systems still send. FHIR is the current HL7 standard for exchanging health
-			records. I also led development of Patient Access APIs certified for USCDI v1, the federal list of data elements that
-			certified health IT must exchange.
-		</p>
-		<p>
-			At the CDC I worked on federal and state data interoperability during COVID-19 and contributed to USCDI data
-			element proposals. At the University of Illinois Chicago I designed an OMOP data layer that put data from
-			several EHR systems into one standard representation.
-		</p>
-
-		<h2>From product to building</h2>
-		<p>
-			Most of that work was in product and analyst roles. I interviewed clinicians and principal investigators, wrote
-			requirements, prioritized backlogs, and launched MVPs. I still start there, and now I write the code and the
-			evaluations as well. The <a href="/projects/">projects</a> on this site are where I do that in public, on synthetic
-			data only.
+		<p class="lede">
+			I'm Jagnyesh Patra. For nine years I have worked on clinical and payer data at providers, payers, a pharmacy
+			benefit manager, and the CDC.
 		</p>
 
 		<h2>How I work</h2>
-		<ul>
+		<ul class="principles">
 			<li>
-				I measure a claim against a baseline and publish the result when it goes against me. In
-				<a href="/projects/#rcm-ai">rcm-ai</a>, the plain-LLM baseline beat my knowledge graph on accuracy, and the
-				README says so first.
+				<p class="principle">I measure a claim against a baseline and publish the result even when it goes against me.</p>
+				<p class="evidence">
+					In <a href="/projects/#rcm-ai">rcm-ai</a>, the LLM-only baseline beat my knowledge graph on accuracy, and the
+					README's results section says so.
+				</p>
 			</li>
-			<li>I keep every fact traceable to the source row it came from.</li>
-			<li>I put human review where a wrong answer costs the most.</li>
+			<li>
+				<p class="principle">I keep every fact traceable to the source row it came from.</p>
+				<p class="evidence">In rcm-ai, every step behind an appealable verdict names its source row.</p>
+			</li>
+			<li>
+				<p class="principle">I put human review where a wrong answer costs the most.</p>
+				<p class="evidence">
+					In <a href="/projects/#researchflow">researchflow</a>, no SQL query runs until an informatician approves it.
+				</p>
+			</li>
 		</ul>
+
+		<h2>Where I've worked</h2>
+		<ul class="work">
+			{
+				work.map((place) => (
+					<li>
+						<p class="meta">
+							<span>{place.dates}</span>
+						</p>
+						<div>
+							<p class="org">{place.org}</p>
+							{place.what.map((sentence) => (
+								<p class="what">{sentence}</p>
+							))}
+						</div>
+					</li>
+				))
+			}
+		</ul>
+
+		<h2>From product roles to writing the code</h2>
+		<p>
+			Most of that work was in product and analyst roles. I interviewed clinicians and principal investigators, wrote
+			requirements, and launched MVPs. Now I write the code and the evaluations as well.
+			The <a href="/projects/">projects</a> on this site show that work on synthetic and public data, never patient
+			records.
+		</p>
 
 		<h2>Elsewhere</h2>
 		<p>
@@ -56,3 +102,49 @@ import Base from '../layouts/Base.astro';
 		</p>
 	</article>
 </Base>
+<style>
+	.lede {
+		margin-bottom: 0;
+	}
+	.principles,
+	.work {
+		display: grid;
+		gap: 1rem;
+		list-style: none;
+		margin: 1rem 0 0;
+		padding: 0;
+	}
+	.principle,
+	.evidence {
+		margin: 0;
+	}
+	.principle {
+		font-weight: 500;
+	}
+	.evidence,
+	.what {
+		color: var(--secondary);
+		font-size: 0.9375rem;
+	}
+	.work li {
+		display: grid;
+		gap: 0.25rem;
+	}
+	.work p {
+		margin: 0;
+	}
+	.what + .what {
+		margin-top: 0.5rem;
+	}
+	.org {
+		font-weight: 500;
+	}
+	/* A rail of years down the left once there is room; on phones the years sit above each place. */
+	@media (min-width: 40rem) {
+		.work li {
+			grid-template-columns: 6.5rem minmax(0, 1fr);
+			align-items: baseline;
+			gap: 0 1rem;
+		}
+	}
+</style>

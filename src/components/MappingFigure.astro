@@ -1,0 +1,140 @@
+---
+// One synthetic patient as an HL7 v2 PID segment and as the FHIR R4 Patient it maps to.
+// The numbered names follow Synthea's convention, so the record reads as synthetic at a glance.
+---
+
+<figure class="mapping">
+	<div class="panel">
+		<p class="label">HL7 v2 PID segment</p>
+		{/* The wbr tags let a narrow screen wrap between fields instead of inside a value. */}
+		<pre><code>PID|<wbr />1|<wbr />|<wbr /><mark class="f1">100234^^^GEN^MR</mark>|<wbr />|<wbr /><mark class="f2">Rivera954^Ana972^M</mark>|<wbr />|<wbr /><mark class="f3">19740312</mark>|<wbr /><mark class="f4">F</mark>|<wbr />…</code></pre>
+	</div>
+	<div class="panel fhir">
+		<p class="label">FHIR R4 Patient</p>
+		<pre><code>{`{
+  "resourceType": "Patient",
+`}<span class="identifier">{`  "identifier": [{
+    "type": { "text": "MR" },
+    "value": `}<mark class="f1">"100234"</mark>{`
+  }],
+`}</span>{`  "name": [{
+    "family": `}<mark class="f2">"Rivera954"</mark>{`,
+    "given": [`}<mark class="f2">"Ana972"</mark>{`, `}<mark class="f2">"M"</mark>{`]
+  }],
+  "birthDate": `}<mark class="f3">"1974-03-12"</mark>{`,
+  "gender": `}<mark class="f4">"female"</mark>{`
+}`}</code></pre>
+	</div>
+	<figcaption>
+		<ul class="legend">
+			<li><span class="key f1">PID-3</span> identifier</li>
+			<li><span class="key f2">PID-5</span> name</li>
+			<li><span class="key f3">PID-7</span> birthDate, reformatted</li>
+			<li><span class="key f4">PID-8</span> gender, F mapped to female</li>
+		</ul>
+		<p>A synthetic patient. The mapping standard decides each conversion, such as the date format and the gender code.</p>
+	</figcaption>
+</figure>
+<style>
+	.mapping {
+		display: grid;
+		gap: 0.75rem;
+		margin: 0;
+	}
+	.panel {
+		padding: 1rem 1.25rem;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+	}
+	.fhir {
+		margin-left: 2rem;
+	}
+	.label {
+		margin: 0 0 0.5rem;
+		color: var(--muted);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+	}
+	pre {
+		margin: 0;
+		padding: 0;
+		border: 0;
+		background: none;
+		overflow: visible;
+		font-size: 0.8125rem;
+		line-height: 1.6;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+	mark {
+		color: inherit;
+		border-radius: 4px;
+		padding: 0 0.125rem;
+		box-decoration-break: clone;
+		-webkit-box-decoration-break: clone;
+	}
+	.f1 {
+		background: color-mix(in srgb, var(--field-1) var(--field-alpha), transparent);
+		box-shadow: inset 0 -2px 0 var(--field-1);
+	}
+	.f2 {
+		background: color-mix(in srgb, var(--field-2) var(--field-alpha), transparent);
+		box-shadow: inset 0 -2px 0 var(--field-2);
+	}
+	.f3 {
+		background: color-mix(in srgb, var(--field-3) var(--field-alpha), transparent);
+		box-shadow: inset 0 -2px 0 var(--field-3);
+	}
+	.f4 {
+		background: color-mix(in srgb, var(--field-4) var(--field-alpha), transparent);
+		box-shadow: inset 0 -2px 0 var(--field-4);
+	}
+	figcaption {
+		margin-left: 2rem;
+		color: var(--muted);
+		font-size: 0.8125rem;
+	}
+	.legend {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.25rem 1rem;
+		list-style: none;
+		margin: 0.25rem 0 0.5rem;
+		padding: 0;
+		color: var(--secondary);
+	}
+	.key {
+		display: inline-block;
+		margin-right: 0.5rem;
+		padding: 0 0.25rem;
+		border-radius: 4px;
+		color: var(--text);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+	}
+	figcaption p {
+		margin: 0;
+	}
+	@media (prefers-color-scheme: dark) {
+		.panel {
+			box-shadow: none;
+		}
+	}
+	/* On phones the figure keeps three mappings and drops the identifier and the legend, so the projects stay close. */
+	@media (max-width: 30rem) {
+		.fhir,
+		figcaption {
+			margin-left: 0;
+		}
+		.identifier,
+		.legend {
+			display: none;
+		}
+		pre mark.f1 {
+			background: none;
+			box-shadow: none;
+		}
+	}
+</style>
