@@ -1,5 +1,5 @@
 ---
-import MappingFigure from '../components/MappingFigure.astro';
+import LifeFigure from '../components/LifeFigure.astro';
 import PostCard from '../components/PostCard.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
@@ -17,16 +17,18 @@ const [leadProject, ...otherProjects] = projects;
 	<section class="hero">
 		<div class="hero-text">
 			<h1>I map clinical data to FHIR and OMOP, and check AI output against those standards</h1>
-			<p class="lede">
-				I'm Jagnyesh Patra. I've spent nine years at providers, payers, pharmacy benefit managers, and public health
-				agencies. I started in product roles, and now I write the code and the evaluations too.
-			</p>
-			<p class="actions">
-				<a class="button" href="/projects/">What each project found</a>
-				<a href="/resume/">Résumé</a>
-			</p>
+			<div class="intro">
+				<p class="lede">
+					I'm Jagnyesh Patra. I've spent nine years at providers, payers, pharmacy benefit managers, and public health
+					agencies. I started in product roles, and now I write the code and the evaluations too.
+				</p>
+				<p class="actions">
+					<a class="button" href="/projects/">What each project found</a>
+					<a href="/resume/">Résumé</a>
+				</p>
+			</div>
 		</div>
-		<MappingFigure />
+		<LifeFigure />
 	</section>
 
 	{
@@ -131,11 +133,23 @@ const [leadProject, ...otherProjects] = projects;
 			grid-column: 1 / -1;
 		}
 	}
+	/* The headline and the introduction share one band, so the figure under them stays in the first screen. */
 	@media (min-width: 64rem) {
 		.hero {
-			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+			gap: 2rem;
+			padding: 1rem 0 2rem;
+		}
+		.hero-text {
+			display: grid;
+			grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+			align-items: end;
 			gap: 4rem;
-			padding: 4rem 0 2rem;
+		}
+		h1 {
+			margin-bottom: 0;
+		}
+		.lede {
+			margin-bottom: 1.5rem;
 		}
 	}
 </style>

@@ -1,0 +1,1072 @@
+---
+// One synthetic patient's life as her FHIR record builds it: a person drawn from her own height and BMI
+// observations on the left, and the newest resource on the right. scripts/life-data.mjs builds the data from a
+// Synthea bundle. The server renders the final frame, so the figure reads correctly before the script runs.
+import life from '../data/life.json';
+import {
+	covers,
+	CX,
+	figure,
+	GROUND,
+	labelWidth,
+	RULER_LABELS,
+	RULER_TOP,
+	RULER_X,
+	type Site,
+	VIEW_TOP,
+	yOf,
+} from '../lib/life-figure';
+
+const { milestones, series, asOfAge, asOf, total } = life;
+const last = milestones.length - 1;
+const at = <T,>(points: T[]) => points[points.length - 1];
+const shape = figure(asOfAge, at(series.height)[1], at(series.bmi)[1]);
+const [, sys, dia] = at(series.bp);
+
+const TYPE: Record<string, string> = {
+	Patient: 't-patient',
+	Observation: 't-obs',
+	Condition: 't-cond',
+	Immunization: 't-imm',
+	MedicationRequest: 't-med',
+};
+
+// Colors JSON tokens. A key named "code" whose value is a terminology code, such as a SNOMED CT or LOINC code, gets
+// the mark of its resource type. Each line carries its indent, so a long value that wraps lines up under its key
+// instead of at the left edge.
+const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function highlight(json: string) {
+	let key = '';
+	const tokens = (line: string) =>
+		line.replace(/("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\.\d+)?)|([{}[\],])/g, (_, str, colon, num, punct) => {
+			if (str && colon) {
+				key = str;
+				return `<span class="k">${escape(str)}</span>${colon}`;
+			}
+			if (str) {
+				const coded = key === '"code"' && /^"\d[\d-]*"$/.test(str);
+				return `<span class="${coded ? 's mark' : 's'}">${escape(str)}</span>`;
+			}
+			if (num) return `<span class="num">${num}</span>`;
+			return `<span class="p">${punct}</span>`;
+		});
+	return json
+		.split('\n')
+		.map((line) => `<span class="line" style="--indent: ${line.length - line.trimStart().length}">${tokens(line)}</span>`)
+		.join('');
+}
+
+const rulerTicks = Array.from({ length: RULER_TOP / 10 + 1 }, (_, i) => i * 10);
+const pct = (x: number) => `${Math.round(x * 100)}%`;
+const markerText = `${at(series.height)[1]} cm`;
+const hasSites = milestones.some((m) => m.site);
+const data = {
+	asOf,
+	asOfAge,
+	birthDate: life.patient.birthDate,
+	ages: milestones.map((m) => m.age),
+	dates: milestones.map((m) => m.date),
+	resolved: milestones.map((m) => m.resolvedAge ?? null),
+	series,
+	counts: life.counts,
+};
+---
+
+<figure class="life" data-life>
+	<div class="panel">
+		<div class="scrub">
+			<button type="button" class="play" data-play aria-label="Play from birth">
+				<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+					<path class="icon-play" d="M5 3.5v9l7-4.5z" />
+					<path class="icon-pause" d="M4.5 3.5h2.5v9H4.5zM9 3.5h2.5v9H9z" />
+				</svg>
+			</button>
+			<p class="meta clock"><span data-age>Age {Math.floor(asOfAge)}</span><span data-date>{asOf}</span></p>
+			<div class="track">
+				<ol class="ticks" aria-hidden="true">
+					{
+						milestones.map((m) => (
+							<li class={TYPE[m.type]} style={`left: ${((m.age / asOfAge) * 100).toFixed(2)}%`} />
+						))
+					}
+				</ol>
+				<input
+					type="range"
+					min="0"
+					max={asOfAge}
+					step="any"
+					value={asOfAge}
+					data-scrub
+					aria-label="Age"
+					aria-valuetext={`Age ${Math.floor(asOfAge)}, ${asOf}`}
+				/>
+				<ol class="decades" aria-hidden="true">
+					{[0, 10, 20, 30, 40, 50].map((y) => <li style={`left: ${((y / asOfAge) * 100).toFixed(2)}%`}>{y}</li>)}
+				</ol>
+			</div>
+			<p class="label count"><span data-count>{total.toLocaleString('en-US')}</span> resources</p>
+		</div>
+
+		<div class="body">
+			{/* The clinical view: the person, her vitals, and her entries in plain words. The record beside it is the data. */}
+			<div class="clinical">
+				<div class="person">
+					<svg
+						viewBox={`0 ${VIEW_TOP} 200 ${280 - VIEW_TOP}`}
+						aria-hidden="true"
+						focusable="false"
+						data-part="art"
+						style={`--gray: ${pct(shape.gray)}; --trousers: ${pct(shape.trousers)}`}
+					>
+						<g class="ruler">
+							<line x1={RULER_X} y1={yOf(RULER_TOP)} x2={RULER_X} y2={GROUND} />
+							{
+								rulerTicks.map((cm) => (
+									<line x1={RULER_X - (cm % 50 === 0 || cm === RULER_TOP ? 7 : 4)} y1={yOf(cm)} x2={RULER_X} y2={yOf(cm)} />
+								))
+							}
+							{
+								RULER_LABELS.map((cm) => (
+									<text x={RULER_X + 5} y={yOf(cm)} data-cm={cm} class={covers(cm, shape.top) ? 'covered' : undefined}>
+										{cm === RULER_TOP ? `${cm} cm` : cm}
+									</text>
+								))
+							}
+						</g>
+						<g class="dots">
+							{series.height.map(([age, cm]) => <circle class="on" cx={RULER_X} cy={yOf(cm)} r="2" data-age={age} />)}
+						</g>
+						<line class="ground" x1={CX - 44} y1={GROUND} x2={RULER_X} y2={GROUND} />
+						<ellipse class="shadow" data-part="shadow" {...shape.shadow} />
+
+						<g opacity={shape.infant} data-part="infant">
+							<rect class="cloth" data-part="swaddle" {...shape.swaddle} />
+							<path class="fold" data-part="fold" d={shape.fold} />
+						</g>
+						<path class="hair" data-part="hairBack" d={shape.hairBack} opacity={shape.hairOpacity} />
+						<g opacity={1 - shape.infant} data-part="standing">
+							<rect class="leg" data-part="legL" {...shape.legL} />
+							<rect class="leg" data-part="legR" {...shape.legR} />
+							<ellipse class="shoe" data-part="shoeL" {...shape.shoeL} />
+							<ellipse class="shoe" data-part="shoeR" {...shape.shoeR} />
+							<rect class="skin" data-part="neck" {...shape.neck} />
+							<path class="cloth" data-part="torso" d={shape.torso} />
+							<ellipse class="skin collar" data-part="collar" {...shape.collar} />
+							<rect class="skin" data-part="armL" {...shape.armL} />
+							<rect class="skin" data-part="armR" {...shape.armR} />
+						</g>
+						<circle class="skin" data-part="head" {...shape.head} />
+						<path class="hair" data-part="hairFront" d={shape.hairFront} opacity={shape.hairOpacity} />
+
+						{/* One mark per condition with a finding site. Eyes and kidneys come in pairs, so they get two. */}
+						<g class="sites">
+							{
+								milestones.map(
+									(m, i) =>
+										m.site && (
+											<g
+												class:list={['site', { resolved: m.resolvedAge !== undefined && i !== last }]}
+												data-index={i}
+												data-site={m.site}
+											>
+												{shape.sites[m.site as Site].map(([x, y]) => (
+													<>
+														<circle class="ripple" cx={x} cy={y} r="2.6" />
+														<circle class="halo" cx={x} cy={y} r="6" />
+														<circle class="spot" cx={x} cy={y} r="2.6" />
+													</>
+												))}
+											</g>
+										),
+								)
+							}
+						</g>
+
+						<g class="marker" data-part="marker" transform={`translate(0 ${shape.top.toFixed(1)})`}>
+							<line x1={CX} y1="0" x2={RULER_X} y2="0" />
+							<rect x={RULER_X + 2} y="-6.5" width={labelWidth(markerText)} height="13" rx="3" data-part="marker-box" />
+							<text x={RULER_X + 5.5} y="0" data-part="marker-text">{markerText}</text>
+						</g>
+					</svg>
+
+					<div class="readout">
+						<dl class="vitals">
+							<div>
+								<dt>Height</dt>
+								<dd data-vital="height">{at(series.height)[1]} cm</dd>
+							</div>
+							<div>
+								<dt>Weight</dt>
+								<dd data-vital="weight">{at(series.weight)[1]} kg</dd>
+							</div>
+							<div>
+								<dt>BMI</dt>
+								<dd data-vital="bmi">{at(series.bmi)[1]}</dd>
+							</div>
+							<div>
+								<dt>Blood pressure</dt>
+								<dd data-vital="bp">{sys}/{dia}</dd>
+							</div>
+						</dl>
+						{/* Explains the marks on the drawing, which screen readers skip; the record lists the same conditions. */}
+						<p class:list={['legend', { on: hasSites }]} data-part="legend" aria-hidden="true">
+							<span class="item"><span class="key"></span>Active condition</span>
+							<span class="item"><span class="key resolved"></span>Resolved</span>
+						</p>
+					</div>
+				</div>
+				<ol class="history" aria-label="Entries so far, newest first">
+					{
+						milestones
+							.map((m, i) => ({ m, i }))
+							.reverse()
+							.map(({ m, i }) => (
+								<li data-index={i}>
+									<button type="button" data-jump={i} aria-current={i === last ? 'step' : undefined}>
+										<span class={`when ${TYPE[m.type]}`}>{m.date}</span>
+										<span class="what">
+											{m.label}
+											{m.value && <span class="value"> {m.value}</span>}
+											<span class="sr-only">, {m.type}</span>
+										</span>
+									</button>
+								</li>
+							))
+					}
+				</ol>
+			</div>
+
+			<div class="record">
+				<div class="record-bar">
+					<p class="label">FHIR R4, newest entry</p>
+					<span class="tag">Synthetic patient</span>
+				</div>
+				{/* Every entry shares one grid cell, so the cell keeps the height of the longest and nothing below jumps. */}
+				<div class="current">
+					{
+						milestones.map((m, i) => (
+							<pre class={`resource ${TYPE[m.type]}`} data-index={i} data-shown={i === last ? '' : undefined}><code set:html={highlight(m.json)} /></pre>
+						))
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<figcaption>
+		Synthea, an open-source patient simulator, generated this record. It holds {total.toLocaleString('en-US')} FHIR R4
+		resources. The figure shows {milestones.length} of them, trimmed to their type, status, code, value and date, and
+		draws the person from her own height and BMI observations.
+	</figcaption>
+	<script is:inline type="application/json" data-life-data set:html={JSON.stringify(data)} />
+</figure>
+
+<script>
+	import { covers, figure as shapeAt, labelWidth, type Site } from '../lib/life-figure';
+
+	interface LifeData {
+		asOf: string;
+		asOfAge: number;
+		birthDate: string;
+		ages: number[];
+		dates: string[];
+		resolved: (number | null)[];
+		series: { height: number[][]; weight: number[][]; bmi: number[][]; bp: number[][] };
+		counts: number[];
+	}
+
+	const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+	const TRAVEL = 850;
+	const HOLD = 800;
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+	// The latest recorded value at or before age t: what the chart would show on that day.
+	function recorded(points: number[][], t: number) {
+		let found: number[] | undefined;
+		for (const p of points) {
+			if (p[0] > t + 1e-6) break;
+			found = p;
+		}
+		return found;
+	}
+	// A smooth value between two recordings, so the drawn person grows instead of jumping at each visit.
+	function between(points: number[][], t: number) {
+		if (t <= points[0][0]) return points[0][1];
+		for (let i = 1; i < points.length; i++) {
+			const [a, va] = points[i - 1];
+			const [b, vb] = points[i];
+			if (t <= b) return va + ((vb - va) * (t - a)) / (b - a);
+		}
+		return points[points.length - 1][1];
+	}
+	const ease = (p: number) => (p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2);
+
+	for (const root of document.querySelectorAll<HTMLElement>('[data-life]')) {
+		const data: LifeData = JSON.parse(root.querySelector('[data-life-data]')!.textContent!);
+		const { ages, asOfAge, series, counts } = data;
+		const birth = Date.parse(data.birthDate);
+		const last = ages.length - 1;
+
+		const q = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+		const part = <T extends Element>(name: string) => q<T>(`[data-part="${name}"]`);
+		const scrub = q<HTMLInputElement>('[data-scrub]');
+		const play = q<HTMLButtonElement>('[data-play]');
+		const entries = [...root.querySelectorAll<HTMLElement>('.resource')];
+		const rows = [...root.querySelectorAll<HTMLElement>('.history li')];
+		const dots = [...root.querySelectorAll<SVGCircleElement>('.dots circle')];
+		const sites = [...root.querySelectorAll<SVGGElement>('.site')];
+		const rulerLabels = [...root.querySelectorAll<SVGTextElement>('.ruler text')];
+		const vital = (name: string) => q<HTMLElement>(`[data-vital="${name}"]`);
+
+		let age = asOfAge;
+		let shown = last;
+
+		const setRect = (el: SVGElement, r: object) => {
+			for (const [k, v] of Object.entries(r)) el.setAttribute(k, String(v));
+		};
+
+		function dateAt(t: number, k: number) {
+			if (Math.abs(t - ages[k]) < 1e-3) return data.dates[k];
+			if (t >= asOfAge - 1e-3) return data.asOf;
+			return new Date(birth + Math.round(t * 365.25) * 864e5).toISOString().slice(0, 10);
+		}
+		function ageLabel(t: number) {
+			if (t < 1 / 24) return 'Newborn';
+			if (t < 1) return `${Math.floor(t * 12)} months`;
+			return `Age ${Math.floor(t)}`;
+		}
+
+		function showEntry(k: number, animate: boolean) {
+			if (k === shown) return;
+			shown = k;
+			for (const el of entries) el.toggleAttribute('data-shown', Number(el.dataset.index) === k);
+			for (const row of rows) {
+				const i = Number(row.dataset.index);
+				row.hidden = i > k;
+				const button = row.querySelector('button')!;
+				if (i === k) button.setAttribute('aria-current', 'step');
+				else button.removeAttribute('aria-current');
+			}
+			if (animate && !reduceMotion.matches) {
+				entries[k].firstElementChild!.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], {
+					duration: 420,
+					easing: EASE,
+				});
+				rows[last - k].animate([{ opacity: 0 }, { opacity: 1 }], { duration: 420, easing: EASE });
+				for (const ripple of root.querySelectorAll(`.site[data-index="${k}"] .ripple`)) {
+					ripple.animate(
+						[
+							{ opacity: 0.7, transform: 'scale(1)' },
+							{ opacity: 0, transform: 'scale(3.5)' },
+						],
+						{ duration: 900, easing: EASE },
+					);
+				}
+			}
+		}
+
+		function render(t: number, k = ages.findLastIndex((a) => a <= t + 1e-6), animate = false) {
+			age = t;
+			const cm = between(series.height, t);
+			const bmi = t >= 18 ? between(series.bmi, t) : null;
+			const s = shapeAt(t, cm, bmi);
+
+			const parts = ['armL', 'armR', 'legL', 'legR', 'neck', 'swaddle', 'collar', 'shoeL', 'shoeR', 'shadow', 'head'] as const;
+			for (const name of parts) setRect(part(name), s[name]);
+			for (const name of ['torso', 'fold', 'hairBack', 'hairFront'] as const) part(name).setAttribute('d', s[name]);
+			for (const name of ['hairBack', 'hairFront']) part(name).setAttribute('opacity', s.hairOpacity.toFixed(2));
+			const art = part<SVGSVGElement>('art');
+			art.style.setProperty('--gray', `${Math.round(s.gray * 100)}%`);
+			art.style.setProperty('--trousers', `${Math.round(s.trousers * 100)}%`);
+			part('infant').setAttribute('opacity', s.infant.toFixed(2));
+			part('standing').setAttribute('opacity', (1 - s.infant).toFixed(2));
+
+			part('marker').setAttribute('transform', `translate(0 ${s.top.toFixed(1)})`);
+			const h = recorded(series.height, t);
+			const label = `${h![1]} cm`;
+			part('marker-text').textContent = label;
+			part('marker-box').setAttribute('width', String(labelWidth(label)));
+			for (const text of rulerLabels) text.classList.toggle('covered', covers(Number(text.dataset.cm), s.top));
+			for (const dot of dots) dot.classList.toggle('on', Number(dot.dataset.age) <= t + 1e-6);
+
+			// A condition's mark appears with its entry, stays solid while the condition is active, and turns to an
+			// outline once it resolves. The entry on show keeps its mark solid, so the two always match.
+			for (const g of sites) {
+				const i = Number(g.dataset.index);
+				const points = s.sites[g.dataset.site as Site];
+				const circles = [...g.querySelectorAll('circle')];
+				points.forEach(([x, y], j) => {
+					for (const c of circles.slice(j * 3, j * 3 + 3)) setRect(c, { cx: x, cy: y });
+				});
+				const on = i <= k;
+				const resolvedAt = data.resolved[i];
+				g.classList.toggle('on', on);
+				g.classList.toggle('resolved', on && i !== k && resolvedAt !== null && t >= resolvedAt - 1e-6);
+			}
+			part('legend').classList.toggle('on', sites.some((g) => g.classList.contains('on')));
+
+			const w = recorded(series.weight, t);
+			const b = recorded(series.bmi, t);
+			const bp = recorded(series.bp, t);
+			vital('height').textContent = h ? `${h[1]} cm` : '–';
+			vital('weight').textContent = w ? `${w[1]} kg` : '–';
+			vital('bmi').textContent = b ? `${b[1]}` : '–';
+			vital('bp').textContent = bp ? `${bp[1]}/${bp[2]}` : '–';
+
+			const month = Math.min(Math.floor(t * 12), counts.length - 1);
+			q('[data-count]').textContent = counts[month].toLocaleString('en-US');
+
+			const date = dateAt(t, k);
+			q('[data-age]').textContent = ageLabel(t);
+			q('[data-date]').textContent = date;
+			scrub.value = String(t);
+			scrub.setAttribute('aria-valuetext', `${ageLabel(t)}, ${date}`);
+			root.style.setProperty('--progress', `${(t / asOfAge) * 100}%`);
+			showEntry(k, animate);
+		}
+
+		// Playback walks from milestone to milestone, easing between them and pausing on each, so a year with
+		// three entries gets as much screen time as a quiet decade.
+		let playing = false;
+		let frame = 0;
+		let segment = { from: 0, to: 0, k: 0, start: 0, hold: 0 };
+
+		function nextSegment(now: number) {
+			const k = Math.min(shown + 1, last + 1);
+			const to = k <= last ? ages[k] : asOfAge;
+			segment = { from: age, to, k, start: now, hold: 0 };
+		}
+		function tick(now: number) {
+			if (!playing) return;
+			const { from, to, k, start, hold } = segment;
+			if (hold) {
+				if (now - hold >= HOLD) nextSegment(now);
+			} else {
+				const p = to - from < 1e-6 ? 1 : Math.min((now - start) / TRAVEL, 1);
+				const t = from + (to - from) * ease(p);
+				const arrived = p >= 1;
+				render(arrived ? to : t, arrived && k <= last ? k : shown, arrived);
+				if (arrived) {
+					if (k > last || to >= asOfAge) return stop(true);
+					segment.hold = now;
+				}
+			}
+			frame = requestAnimationFrame(tick);
+		}
+		function start() {
+			if (age >= asOfAge - 1e-3) render(0, 0);
+			playing = true;
+			root.dataset.playing = '';
+			play.setAttribute('aria-label', 'Pause');
+			const now = performance.now();
+			segment = { from: age, to: age, k: shown, start: now, hold: now };
+			frame = requestAnimationFrame(tick);
+		}
+		function stop(ended = false) {
+			playing = false;
+			cancelAnimationFrame(frame);
+			delete root.dataset.playing;
+			play.setAttribute('aria-label', ended || age >= asOfAge - 1e-3 ? 'Play from birth' : 'Play');
+		}
+
+		play.addEventListener('click', () => (playing ? stop() : start()));
+		scrub.addEventListener('input', () => {
+			stop();
+			render(Number(scrub.value));
+		});
+		// Arrow keys step through the record one entry at a time instead of by a fraction of a year.
+		scrub.addEventListener('keydown', (event) => {
+			const k =
+				event.key === 'ArrowRight' || event.key === 'ArrowUp'
+					? Math.min(shown + 1, last)
+					: event.key === 'ArrowLeft' || event.key === 'ArrowDown'
+						? Math.max(shown - 1, 0)
+						: event.key === 'Home'
+							? 0
+							: event.key === 'End'
+								? last
+								: -1;
+			if (k < 0) return;
+			event.preventDefault();
+			stop();
+			render(event.key === 'End' ? asOfAge : ages[k], k, true);
+		});
+		root.addEventListener('click', (event) => {
+			const button = (event.target as Element).closest<HTMLElement>('[data-jump]');
+			if (!button) return;
+			stop();
+			const k = Number(button.dataset.jump);
+			render(ages[k], k, true);
+		});
+
+		// Play once, the first time the person is on screen. On a phone the whole figure is taller than the screen, so
+		// waiting for half of it would never start. With reduced motion the final frame stays.
+		if (!reduceMotion.matches && 'IntersectionObserver' in window) {
+			render(0, 0);
+			const observer = new IntersectionObserver(
+				(entries) => {
+					if (!entries.some((e) => e.isIntersecting)) return;
+					observer.disconnect();
+					setTimeout(start, 600);
+				},
+				{ threshold: 0.6 },
+			);
+			observer.observe(q('.person'));
+		}
+	}
+</script>
+
+<style>
+	.life {
+		display: grid;
+		gap: 0.75rem;
+		margin: 0;
+	}
+	.panel {
+		padding: 0.75rem 1.25rem 1rem;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+	}
+	.record-bar {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.75rem;
+	}
+	/* Wide enough for the longest label, "11 months | 1968-04-17", so the track never shifts while it plays. */
+	.clock {
+		flex-wrap: nowrap;
+		min-width: 11.5rem;
+		color: var(--text);
+		font-size: 0.8125rem;
+		white-space: nowrap;
+	}
+	.clock [data-date] {
+		color: var(--muted);
+	}
+	.tag,
+	.label {
+		margin: 0;
+		color: var(--muted);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+	}
+	.count {
+		font-variant-numeric: tabular-nums;
+	}
+
+	.t-patient {
+		--c: var(--muted);
+	}
+	.t-imm {
+		--c: var(--field-1);
+	}
+	.t-med {
+		--c: var(--field-2);
+	}
+	.t-obs {
+		--c: var(--field-3);
+	}
+	.t-cond {
+		--c: var(--field-4);
+	}
+
+	.body {
+		display: grid;
+		gap: 1rem 2rem;
+	}
+	.clinical {
+		display: grid;
+		align-content: start;
+		gap: 0.75rem;
+		min-width: 0;
+	}
+
+	/* The person */
+	/* On phones the drawing takes the wider share, so its ruler numbers stay as large as on a desktop. */
+	.person {
+		display: grid;
+		grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+		align-items: end;
+		gap: 1rem;
+	}
+	svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+	}
+	.ruler line {
+		stroke: color-mix(in srgb, var(--text) 28%, transparent);
+		stroke-width: 1;
+	}
+	.ruler text,
+	.marker text {
+		fill: var(--muted);
+		font-family: var(--font-mono);
+		font-size: 8px;
+		dominant-baseline: middle;
+	}
+	.ground {
+		stroke: color-mix(in srgb, var(--text) 28%, transparent);
+	}
+	.dots circle {
+		fill: var(--accent);
+		opacity: 0;
+		transition: opacity 200ms var(--ease);
+	}
+	.dots circle.on {
+		opacity: 0.35;
+	}
+	/* Each material gets one tone. Young hair is darker than the skin and gray hair lighter, in both schemes. */
+	.life {
+		--skin: color-mix(in srgb, var(--text) 28%, var(--surface));
+		--top: color-mix(in srgb, var(--text) 44%, var(--surface));
+		--trouser: color-mix(in srgb, var(--text) 62%, var(--surface));
+		--shoe: color-mix(in srgb, var(--text) 80%, var(--surface));
+		--hair: #3b3431;
+		--hair-gray: #b3aea6;
+	}
+	.skin,
+	.cloth,
+	.leg,
+	.shoe,
+	.hair {
+		stroke: var(--surface);
+		stroke-width: 1.5;
+		paint-order: stroke;
+	}
+	.skin {
+		fill: var(--skin);
+	}
+	.cloth {
+		fill: var(--top);
+	}
+	.leg {
+		fill: color-mix(in srgb, var(--trouser) var(--trousers, 0%), var(--skin));
+	}
+	.shoe {
+		fill: var(--shoe);
+		stroke-width: 1;
+	}
+	.collar {
+		stroke: none;
+	}
+	.hair {
+		fill: color-mix(in srgb, var(--hair-gray) var(--gray, 0%), var(--hair));
+	}
+	.fold {
+		fill: none;
+		stroke: var(--surface);
+		stroke-width: 1.2;
+	}
+	.shadow {
+		fill: color-mix(in srgb, var(--text) 8%, transparent);
+	}
+	.ruler text.covered {
+		opacity: 0;
+	}
+
+	.site {
+		visibility: hidden;
+	}
+	.site.on {
+		visibility: visible;
+	}
+	.spot {
+		fill: var(--field-4);
+	}
+	.resolved .spot {
+		fill: var(--surface);
+		stroke: var(--field-4);
+		stroke-width: 1.2;
+	}
+	/* A soft halo marks an active finding, so the marks don't read as buttons on her clothes. */
+	.halo {
+		fill: var(--field-4);
+		opacity: 0.2;
+	}
+	.resolved .halo {
+		display: none;
+	}
+	.legend {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.25rem 0.5rem;
+		margin: 0.75rem 0 0;
+		color: var(--muted);
+		font-size: 0.75rem;
+		visibility: hidden;
+	}
+	.legend.on {
+		visibility: visible;
+	}
+	.key {
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background: var(--field-4);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--field-4) 20%, transparent);
+	}
+	.legend .item {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-right: 0.75rem;
+		white-space: nowrap;
+	}
+	.key.resolved {
+		background: none;
+		box-shadow: inset 0 0 0 1.5px var(--field-4);
+	}
+	.ripple {
+		fill: none;
+		stroke: var(--field-4);
+		stroke-width: 0.8;
+		opacity: 0;
+		transform-box: fill-box;
+		transform-origin: center;
+	}
+	.marker line {
+		stroke: var(--accent);
+		stroke-width: 1;
+		stroke-dasharray: 2 2;
+	}
+	.marker rect {
+		fill: var(--surface);
+		stroke: var(--accent);
+		stroke-width: 1;
+	}
+	.marker text {
+		fill: var(--accent);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.vitals {
+		display: grid;
+		gap: 0.625rem;
+		margin: 0 0 0.25rem;
+	}
+	.vitals dt {
+		color: var(--muted);
+		font-size: 0.75rem;
+	}
+	.vitals dd {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.875rem;
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* The record */
+	.record {
+		display: grid;
+		align-content: start;
+		gap: 0.5rem;
+		min-width: 0;
+	}
+	.current {
+		display: grid;
+	}
+	.resource {
+		grid-area: 1 / 1;
+		visibility: hidden;
+		margin: 0;
+		padding: 0.625rem 0.875rem;
+		background: var(--raised);
+		border: 0;
+		border-left: 2px solid var(--c);
+		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+		font-size: 0.75rem;
+		line-height: 1.45;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+	.resource[data-shown] {
+		visibility: visible;
+	}
+	.resource code {
+		display: block;
+	}
+	/* Wrapped lines start two characters past the line's own indent. */
+	.resource :global(.line) {
+		display: block;
+		padding-left: calc((var(--indent) + 2) * 1ch);
+		text-indent: calc((var(--indent) + 2) * -1ch);
+	}
+	/* The JSON is injected HTML, which Astro's scoped styles never reach, so these selectors are global within the box. */
+	.resource :global(.k),
+	.resource :global(.p) {
+		color: var(--secondary);
+	}
+	.resource :global(.mark) {
+		padding: 0 0.125rem;
+		border-radius: 3px;
+		background: color-mix(in srgb, var(--c) var(--field-alpha), transparent);
+		box-shadow: inset 0 -2px 0 var(--c);
+	}
+
+	.history {
+		max-height: 6.5rem;
+		margin: 0;
+		padding: 0;
+		overflow: hidden;
+		list-style: none;
+		mask-image: linear-gradient(to bottom, #000 60%, transparent);
+	}
+	.history button {
+		display: grid;
+		grid-template-columns: 6.75rem minmax(0, 1fr);
+		align-items: baseline;
+		gap: 0.75rem;
+		width: 100%;
+		padding: 0.1875rem 0.5rem;
+		border: 0;
+		border-radius: 6px;
+		background: none;
+		color: var(--secondary);
+		font: inherit;
+		font-size: 0.8125rem;
+		text-align: left;
+		cursor: pointer;
+	}
+	.history button:hover {
+		background: var(--raised);
+	}
+	.history button[aria-current] {
+		color: var(--text);
+	}
+	/* The dot gives each entry its resource type's color, as on the timeline. */
+	.when {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		color: var(--muted);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		font-variant-numeric: tabular-nums;
+	}
+	.when::before {
+		content: '';
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--c);
+	}
+	/* position keeps the screen-reader-only type name inside this clipped box instead of past the page edge. */
+	.what {
+		position: relative;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.value {
+		color: var(--muted);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+	}
+
+	/* The timeline */
+	.scrub {
+		display: grid;
+		grid-template-columns: auto auto minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 0.5rem 1rem;
+		margin: 0 -1.25rem 0.75rem;
+		padding: 0 1.25rem 0.75rem;
+		border-bottom: 1px solid var(--border);
+	}
+	.count {
+		min-width: 7.5rem;
+		text-align: right;
+	}
+	.play {
+		display: grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		padding: 0;
+		border: 1px solid var(--border);
+		border-radius: 50%;
+		background: var(--surface);
+		color: var(--text);
+		cursor: pointer;
+		transition: border-color 150ms var(--ease);
+	}
+	.play:hover {
+		border-color: var(--accent);
+	}
+	.play svg {
+		width: 0.875rem;
+		fill: currentColor;
+	}
+	.icon-pause,
+	[data-playing] .icon-play {
+		display: none;
+	}
+	[data-playing] .icon-pause {
+		display: inline;
+	}
+	.track {
+		position: relative;
+		padding-bottom: 1rem;
+	}
+	.ticks,
+	.decades {
+		position: absolute;
+		inset: 0 0.4375rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		pointer-events: none;
+	}
+	.ticks li {
+		position: absolute;
+		top: 0.4375rem;
+		width: 6px;
+		height: 6px;
+		margin-left: -3px;
+		border-radius: 50%;
+		background: var(--c);
+	}
+	.decades {
+		top: auto;
+		bottom: 0;
+		height: 1rem;
+	}
+	.decades li {
+		position: absolute;
+		transform: translateX(-50%);
+		color: var(--muted);
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+	}
+	input[type='range'] {
+		display: block;
+		width: 100%;
+		height: 1.25rem;
+		margin: 0;
+		background: none;
+		appearance: none;
+		cursor: pointer;
+	}
+	input[type='range']::-webkit-slider-runnable-track {
+		height: 2px;
+		background: linear-gradient(to right, var(--accent) var(--progress, 100%), var(--border) 0);
+	}
+	input[type='range']::-moz-range-track {
+		height: 2px;
+		background: linear-gradient(to right, var(--accent) var(--progress, 100%), var(--border) 0);
+	}
+	input[type='range']::-webkit-slider-thumb {
+		width: 0.875rem;
+		height: 0.875rem;
+		margin-top: -6px;
+		border: 2px solid var(--accent);
+		border-radius: 50%;
+		background: var(--surface);
+		appearance: none;
+	}
+	input[type='range']::-moz-range-thumb {
+		width: 0.875rem;
+		height: 0.875rem;
+		border: 2px solid var(--accent);
+		border-radius: 50%;
+		background: var(--surface);
+	}
+	input[type='range']:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 4px;
+		border-radius: 4px;
+	}
+
+	figcaption {
+		color: var(--muted);
+		font-size: 0.8125rem;
+		max-width: 48rem;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		.panel {
+			box-shadow: none;
+		}
+		.halo {
+			opacity: 0.4;
+		}
+		.life {
+			--skin: color-mix(in srgb, var(--text) 30%, var(--surface));
+			--top: color-mix(in srgb, var(--text) 50%, var(--surface));
+			--trouser: color-mix(in srgb, var(--text) 20%, var(--surface));
+			--shoe: #0d0e10;
+			--hair: #0d0e10;
+			--hair-gray: #c9c6bf;
+		}
+	}
+	/* On narrow screens long codes and URLs wrap, so the longest entry would leave a tall empty box under the
+	   others. There the box follows the entry on show instead. */
+	@media (max-width: 47.99rem) {
+		.resource:not([data-shown]) {
+			display: none;
+		}
+	}
+	@media (min-width: 30rem) {
+		.person {
+			grid-template-columns: 13rem minmax(0, 10rem);
+		}
+	}
+	/* On a tablet the entry list sits beside the person, and the record runs full width under both. */
+	@media (min-width: 48rem) and (max-width: 63.99rem) {
+		.clinical {
+			grid-template-columns: auto minmax(0, 1fr);
+			align-items: end;
+			column-gap: 2rem;
+		}
+	}
+	/* On a desktop the clinical view and the record sit side by side, and the record's label moves into the box's
+	   corner, beside the short first line of every entry, to save a row. */
+	@media (min-width: 64rem) {
+		.body {
+			grid-template-columns: 24rem minmax(0, 1fr);
+		}
+		.record {
+			position: relative;
+		}
+		.record-bar {
+			position: absolute;
+			top: 0.625rem;
+			right: 0.875rem;
+			z-index: 1;
+		}
+		/* The box's tinted background needs the darker secondary text to keep 4.5:1 contrast. */
+		.record-bar .label,
+		.record-bar .tag {
+			color: var(--secondary);
+		}
+	}
+	/* On phones the track gets its own row under the play button, age and count. */
+	@media (max-width: 40rem) {
+		.scrub {
+			grid-template-columns: auto minmax(0, 1fr) auto;
+		}
+		.clock,
+		.count {
+			min-width: 0;
+		}
+		.track {
+			grid-column: 1 / -1;
+			grid-row: 2;
+		}
+	}
+	@media (max-width: 30rem) {
+		.panel {
+			padding: 0.75rem 1rem 1rem;
+		}
+		.scrub {
+			margin: 0 -1rem 1rem;
+			padding: 0 1rem 0.75rem;
+		}
+	}
+</style>
