@@ -277,7 +277,7 @@ const data = {
 
 	const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 	const TRAVEL = 850;
-	const HOLD = 800;
+	const HOLD = 400;
 	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 	// The latest recorded value at or before age t: what the chart would show on that day.
@@ -1005,11 +1005,11 @@ const data = {
 			--hair-gray: #c9c6bf;
 		}
 	}
-	/* On narrow screens long codes and URLs wrap, so the longest entry would leave a tall empty box under the
-	   others. There the box follows the entry on show instead. */
+	/* On a phone the entry list sits above the record. It takes its full height from the first entry, so the record
+	   and the page below it stay still while the list fills. */
 	@media (max-width: 47.99rem) {
-		.resource:not([data-shown]) {
-			display: none;
+		.history {
+			height: 6.5rem;
 		}
 	}
 	@media (min-width: 30rem) {
