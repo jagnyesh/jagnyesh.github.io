@@ -22,6 +22,10 @@ const [leadProject, ...otherProjects] = projects;
 					I'm Jagnyesh Patra. I've spent nine years at providers, payers, pharmacy benefit managers, and public health
 					agencies. I started in product roles, and now I write the code and the evaluations too.
 				</p>
+				<p class="proof">
+					At Optum I set the HL7 v2-to-FHIR mapping standards that eight business units adopted. I also led development
+					of Patient Access APIs certified for USCDI v1.
+				</p>
 				<p class="actions">
 					<a class="button" href="/projects/">What each project found</a>
 					<a href="/resume/">Résumé</a>
@@ -83,7 +87,13 @@ const [leadProject, ...otherProjects] = projects;
 	}
 	.lede {
 		max-width: 36rem;
+		margin-bottom: 0.75rem;
+	}
+	.proof {
+		max-width: 36rem;
 		margin-bottom: 2rem;
+		color: var(--secondary);
+		font-size: 0.9375rem;
 	}
 	.actions {
 		display: flex;
@@ -133,7 +143,9 @@ const [leadProject, ...otherProjects] = projects;
 			grid-column: 1 / -1;
 		}
 	}
-	/* The headline and the introduction share one band, so the figure under them stays in the first screen. */
+	/* The headline and the introduction share one band, so the figure under them stays in the first screen. The
+	   introduction's three parts join the grid, which puts the proof line under the headline, where the column has
+	   room for it, and the links under the introduction. */
 	@media (min-width: 64rem) {
 		.hero {
 			gap: 2rem;
@@ -143,13 +155,18 @@ const [leadProject, ...otherProjects] = projects;
 			display: grid;
 			grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
 			align-items: end;
-			gap: 4rem;
+			gap: 1rem 4rem;
 		}
-		h1 {
+		.intro {
+			display: contents;
+		}
+		h1,
+		.lede,
+		.proof {
 			margin-bottom: 0;
 		}
-		.lede {
-			margin-bottom: 1.5rem;
+		.proof {
+			max-width: none;
 		}
 	}
 </style>
