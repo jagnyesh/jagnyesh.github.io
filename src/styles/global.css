@@ -292,3 +292,40 @@ main.narrow > .prose {
 		transition: none !important;
 	}
 }
+
+/* Print in the light palette whatever the screen uses: dark-mode text on white paper prints as faint gray. */
+@media print {
+	:root {
+		color-scheme: light;
+		--bg: #fff;
+		--surface: #fff;
+		--raised: #f3f2ee;
+		--text: #000;
+		--secondary: #333;
+		--muted: #555;
+		--accent: #000;
+		--accent-strong: #000;
+	}
+
+	/* Every size on the site is in rem, so a smaller root scales the whole page down for paper. */
+	html {
+		font-size: 10pt;
+	}
+
+	body {
+		line-height: 1.4;
+	}
+
+	main,
+	main.narrow > * {
+		max-width: none;
+	}
+
+	main {
+		padding: 0;
+	}
+}
+
+@page {
+	margin: 0.5in;
+}
