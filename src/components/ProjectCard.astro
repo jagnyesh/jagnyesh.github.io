@@ -11,6 +11,7 @@ const { project, variant = 'compact' } = Astro.props;
 const Heading = variant === 'detailed' ? 'h2' : 'h3';
 // Home cards open the project's entry on this site, so readers see the finding before leaving for GitHub.
 const linked = variant !== 'detailed';
+const result = variant === 'compact' ? project.finding : project.result;
 ---
 
 <li class:list={['card', variant, { linked }]} id={project.name}>
@@ -20,7 +21,7 @@ const linked = variant !== 'detailed';
 	</div>
 	<div class="body">
 		{variant === 'detailed' && <p>{project.summary}</p>}
-		{variant !== 'compact' && <p class="result">{project.result}</p>}
+		{result && <p class="result">{result}</p>}
 		<p class="meta">
 			<span>{project.language}</span>
 			<a href={project.repo}>Code</a>
