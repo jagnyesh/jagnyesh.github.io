@@ -19,7 +19,7 @@ export const experience: Role[] = [
 		title: 'Software Product Development Analyst III',
 		org: 'Tufts Medicine',
 		unit: 'Tufts Clinical and Translational Science Institute',
-		location: 'Boston, MA',
+		location: 'Remote',
 		dates: 'September 2026 – Present',
 		bullets: [
 			"Lead the team's evaluation of AI tools for development and data discovery across Epic (Cogito Assistant, Agent Factory), Databricks (Genie), and GitHub (Copilot). Briefed leadership on strengths and limits, including PHI governance and reproducibility, and proposed a scoped Genie pilot.",
