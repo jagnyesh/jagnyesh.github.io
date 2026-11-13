@@ -245,7 +245,7 @@ const data = {
 				<div class="current">
 					{
 						milestones.map((m, i) => (
-							<pre class={`resource ${TYPE[m.type]}`} data-index={i} data-shown={i === last ? '' : undefined}><code set:html={highlight(m.json)} /></pre>
+							<pre class={`resource ${TYPE[m.type]}`} data-index={i} data-shown={i === last ? '' : undefined} tabindex="0"><code set:html={highlight(m.json)} /></pre>
 						))
 					}
 				</div>
@@ -336,10 +336,21 @@ const data = {
 			return `Age ${Math.floor(t)}`;
 		}
 
+		// On phones each entry is shorter than its JSON, so it scrolls its highlighted code into view.
+		function reveal(k: number) {
+			const entry = entries[k];
+			const mark = entry.querySelector<HTMLElement>('.mark');
+			if (!mark || entry.scrollHeight <= entry.clientHeight) return;
+			const box = entry.getBoundingClientRect();
+			const at = mark.getBoundingClientRect();
+			entry.scrollTop += at.top - box.top - (box.height - at.height) / 2;
+		}
+
 		function showEntry(k: number, animate: boolean) {
 			if (k === shown) return;
 			shown = k;
 			for (const el of entries) el.toggleAttribute('data-shown', Number(el.dataset.index) === k);
+			reveal(k);
 			for (const row of rows) {
 				const i = Number(row.dataset.index);
 				row.hidden = i > k;
@@ -498,6 +509,8 @@ const data = {
 			const k = Number(button.dataset.jump);
 			render(ages[k], k, true);
 		});
+
+		reveal(last);
 
 		// Play once, the first time the person is on screen. On a phone the whole figure is taller than the screen, so
 		// waiting for half of it would never start. With reduced motion the final frame stays.
@@ -1010,6 +1023,10 @@ const data = {
 	@media (max-width: 47.99rem) {
 		.history {
 			height: 6.5rem;
+		}
+		/* The longest entry would make the record box 25rem tall and push the projects two screens down. */
+		.resource {
+			max-height: 12rem;
 		}
 	}
 	@media (min-width: 30rem) {
