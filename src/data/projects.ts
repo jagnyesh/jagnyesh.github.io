@@ -7,7 +7,8 @@ export interface Project {
 	finding?: string;
 	language: string;
 	repo: string;
-	demo?: { label: string; url: string };
+	// Links beside Code on the card, in this order.
+	demos?: { label: string; url: string }[];
 }
 
 export const projects: Project[] = [
@@ -21,10 +22,10 @@ export const projects: Project[] = [
 			'Not on accuracy. On 20 synthetic cases, the LLM-only baseline scored 19/20. The graph scored 16/20 on evidence the model extracted, and 17/20 in a later run. It never upheld a denial that should have been appealed, and it sent every miss to a human. Every step behind an appealable verdict names a source row. The case labels still need human review.',
 		language: 'Python',
 		repo: 'https://github.com/jagnyesh/rcm-ai',
-		demo: {
-			label: 'Architecture explorer',
-			url: 'https://jagnyesh.github.io/rcm-ai/architecture/rcm-ai-explorer.html',
-		},
+		demos: [
+			{ label: 'Live demo', url: 'https://rcm-ai-eight.vercel.app/' },
+			{ label: 'Architecture explorer', url: 'https://jagnyesh.github.io/rcm-ai/architecture/rcm-ai-explorer.html' },
+		],
 	},
 	{
 		name: 'researchflow',
@@ -37,7 +38,7 @@ export const projects: Project[] = [
 		finding: 'I projected a 73% cut in LLM cost, and the measured cut was 0%. I traced the gap to three bugs.',
 		language: 'Python',
 		repo: 'https://github.com/jagnyesh/researchflow',
-		demo: { label: 'Architecture', url: 'https://jagnyesh.github.io/researchflow/architecture.html' },
+		demos: [{ label: 'Architecture', url: 'https://jagnyesh.github.io/researchflow/architecture.html' }],
 	},
 	{
 		name: 'field-guide',
@@ -61,6 +62,6 @@ export const projects: Project[] = [
 			'In the simulation, at four or five lanes, changes wait for the one reviewer. That reviewer sets the limit on parallel work.',
 		language: 'HTML',
 		repo: 'https://github.com/jagnyesh/merge-works',
-		demo: { label: 'Live', url: 'https://jagnyesh.github.io/merge-works/' },
+		demos: [{ label: 'Live', url: 'https://jagnyesh.github.io/merge-works/' }],
 	},
 ];
