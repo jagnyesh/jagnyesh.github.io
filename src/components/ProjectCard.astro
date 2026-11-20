@@ -25,7 +25,7 @@ const result = variant === 'compact' ? project.finding : project.result;
 		<p class="meta">
 			<span>{project.language}</span>
 			<a href={project.repo}>Code</a>
-			{project.demo && <a href={project.demo.url}>{project.demo.label}</a>}
+			{project.demos?.map((demo) => <a href={demo.url}>{demo.label}</a>)}
 		</p>
 	</div>
 </li>
